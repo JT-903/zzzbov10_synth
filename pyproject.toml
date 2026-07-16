@@ -1,0 +1,9 @@
+[project]
+name = "zzzbov-recipe"
+version = "0.1.0"
+description = "Automated synthesis of ZZZBOV10 using Capybara"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "opentrons>=9.1.0",
+]
