@@ -1,0 +1,4 @@
+[
+    {"sample_id": 1, "vol_a": 1000, "vol_b": 1000, "vol_c": 1000, "vol_anti": 0, "delay_time": 15},
+    {"sample_id": 2, "vol_a": 1000, "vol_b": 1000, "vol_c": 1000, "vol_anti": 500, "delay_time": 5}
+]

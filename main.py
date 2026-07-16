@@ -1,13 +1,11 @@
 from opentrons import protocol_api
 import json
-from typing import List
 
 # stealing clara's code but modifying it to fit my script
 EXAMPLE_DATA = json.loads("""[
     {"sample_id": 1, "vol_a": 1000, "vol_b": 1000, "vol_c": 1000, "vol_anti": 0, "delay_time": 15},
     {"sample_id": 2, "vol_a": 1000, "vol_b": 1000, "vol_c": 1000, "vol_anti": 500, "delay_time": 10}
 ]""") # pls don't change me if you want to use a real file - change line 133 instead
-
 
 def validate_sample_parameters(samples) -> tuple[bool, str]:
     """Validate sample parameters (dict-based version)."""
@@ -40,7 +38,7 @@ def validate_sample_parameters(samples) -> tuple[bool, str]:
     return True, "All samples valid"
     return True, "All samples valid" # duplicate?
 
-def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], list[float]]:
+def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], list[float], list[float]]:
     """Convert dict-based sample parameters to lists."""
 
     vol_a_list = [s["vol_a"] for s in samples]
@@ -56,7 +54,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 AutoSynthesis",
-    "description": "v0.4b: half measures, heater-shaker hardcode option, json loader, proof of concept 15/07/26",
+    "description": "v0.4c: half measures, heater-shaker hardcode option, json loader, proof of concept, hi matt 16/07/26",
     "author": "JT-903"
 }
 
@@ -73,7 +71,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter")
     hs_plate = hs_adapter.load_labware("nest_24_wellplate_10.4ml")
     hs_mod.close_labware_latch()
-    ''' # no hs_mod - look through and hash out 3 lines
+    ''' # no hs_mod - look through and hash out 2 lines
     hs_plate = protocol.load_labware("nest_24_wellplate_10.4ml", "D3")
     '''
 
@@ -131,7 +129,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Loading sample parameters")
     try:
         samples = EXAMPLE_DATA # change for an actual json file when ready eg:
-        #with open("path/file.json", "r") as f:
+        #with open("sampledata.json", "r") as f:
             #samples = json.load(f)
         is_valid, msg = validate_sample_parameters(samples)
         if not is_valid:
@@ -154,10 +152,12 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # -|===> MAIN <===|-
     protocol.home()
+    antiClass = protocol.get_liquid_class("ethanol_80") # used for anti-solvent transfer - volatile
     protocol.comment("-|===> Starting Protocol <===|-")
     ''' Notes to self:
     0) no manual review so far on the code procedure
     1) mild error checking is here!!
+    2) the .json file data can be imported successfully!
     '''
     
     for i in range(len(samples)):
@@ -169,7 +169,7 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette.transfer(volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
         pipette.drop_tip()
 
-        # Add (trz) to well slowly with mixing
+        # Add (trz) to well slowly with mixing - after testing put this in a function?
         protocol.comment("-> Transferring trz slowly with mixing")
         pipette.well_bottom_clearance.dispense = 21 # don't dip pipette in sample? probs not necessary
         pipette.pick_up_tip()
@@ -192,7 +192,6 @@ def run(protocol: protocol_api.ProtocolContext):
 
         # Add anti-solvent to well (volume 0 is skipped by Capy)
         protocol.comment(f"-> Transferring{" no" if volAnti[i] == 0 else ""} anti-solvent")
-        antiClass = protocol.get_liquid_class("ethanol_80")
         pipette.transfer_with_liquid_class(antiClass, volAnti[i], reservoir.wells()[3], hs_plate.wells()[i])
 
     # Finalising
@@ -206,4 +205,4 @@ def run(protocol: protocol_api.ProtocolContext):
     # transfer does breakdown comments, transfer_with_liquid_class does not
     pipette.configure_for_volume(4) # generates a protocol comment, only useful for 50ul pipette, 1-5 or 5-50 possible
     pipette.well_bottom_clearance.dispense = 1 # does not generate protocol comment - useful so no contamination
-    '''
+    ''' # hi matt
