@@ -5,7 +5,7 @@ import json
 EXAMPLE_DATA = json.loads("""[
     {"sample_id": 1, "vol_a": 1000, "vol_b": 1000, "vol_c": 1000, "vol_anti": 0, "delay_time": 15},
     {"sample_id": 2, "vol_a": 1000, "vol_b": 1000, "vol_c": 1000, "vol_anti": 500, "delay_time": 10}
-]""") # the datalab integration may have to directly inject the json file into here
+]""")
 
 def validate_sample_parameters(samples) -> tuple[bool, str]:
     """Validate sample parameters (dict-based version)."""
@@ -53,34 +53,33 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 
 # This isn't necessary
 metadata = {
-    "protocolName": "ZZZBOV10 AutoSynthesis",
+    "protocolName": "ZZZBOV10 AutoSynthesis for Mara",
     "description": "v0.4d: half measures, heater-shaker hardcode option, json loader, proof of concept 17/07/26",
     "author": "JT-903"
 }
 
-# THIS IS NECESSARY
-requirements = {"robotType": "Flex", "apiLevel": "2.27"}
+# THIS ISn't actually NECESSARY on an OT-2
+requirements = {"robotType": "OT-2", "apiLevel": "2.27"}
 
 def run(protocol: protocol_api.ProtocolContext):
-    # Labware
+    # Labware - either placement index can be used with either robot, but I want to use the native ones
     protocol.comment("-> Initialising deck")
-    tips = protocol.load_labware("opentrons_flex_96_filtertiprack_1000ul", "D1")
-    reservoir = protocol.load_labware("opentrons_tough_4_reservoir_72ml", "D2")
-    #''' # with hs_mod
-    hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
+    tips = protocol.load_labware("opentrons_96_filtertiprack_1000ul", 4)
+    reservoir = protocol.load_labware("opentrons_tough_4_reservoir_72ml", 5)
+    #''' with hs_mod - needs to be lonely on OT-2
+    hs_mod = protocol.load_module("heaterShakerModuleV1", 3)
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter")
     hs_plate = hs_adapter.load_labware("nest_24_wellplate_10.4ml")
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
-    hs_plate = protocol.load_labware("nest_24_wellplate_10.4ml", "D3")
+    hs_plate = protocol.load_labware("nest_24_wellplate_10.4ml", 6)
     '''
 
-    # Trash
-    trash = protocol.load_trash_bin("A3")
+    # Trash is fixed in slot 12
 
     # Instrument
     protocol.comment("-> Initialising instrument")
-    pipette = protocol.load_instrument("flex_1channel_1000", "left", tip_racks=[tips])
+    pipette = protocol.load_instrument("p300_single_gen2", "left", tip_racks=[tips])
 
     # Define liquids in reservoir - I don't think this is necessary and I can't see what it changes
     cobalt_nitrate = protocol.define_liquid(
