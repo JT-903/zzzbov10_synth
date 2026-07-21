@@ -43,7 +43,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # -|===> MAIN <===|-
     protocol.home()
     protocol.comment("-|===> Starting Protocol <===|-")
-    pipette.pick_up_tip(tips.wells()[0])
+    pipette.pick_up_tip(tips.wells()[-1])
 
     # information
     default_aspirate = pipette.flow_rate.aspirate
