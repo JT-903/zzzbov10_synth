@@ -1,4 +1,5 @@
 from opentrons import protocol_api
+from opentrons.protocol_api import SINGLE, ALL
 
 # i feel obligated
 metadata = {
@@ -19,15 +20,15 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Initialising deck")
     # ONLY ONE tips ACTIVE pls
     #tips = protocol.load_labware("opentrons_96_filtertiprack_1000ul", 4) # Mara
-    tips = protocol.load_labware("opentrons_flex_96_filtertiprack_1000ul", "C1") # Capy
-    reservoir = protocol.load_labware("opentrons_tough_4_reservoir_72ml", 5)
+    tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "C1") # Capy
+    reservoir = protocol.load_labware("opentrons_tough_4_reservoir_72ml", "A1")
     ''' with hs_mod - needs to be lonely on OT-2
     hs_mod = protocol.load_module("heaterShakerModuleV1", 3)
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter")
     hs_plate = hs_adapter.load_labware("nest_24_wellplate_10.4ml")
     hs_mod.close_labware_latch()
     ''' # no hs_mod
-    hs_plate = protocol.load_labware("nest_24_wellplate_10.4ml", 6)
+    hs_plate = protocol.load_labware("greiner_96_wellplate_382ul", 6)
     #'''
 
     # Trash - leave blank for Mara
@@ -36,12 +37,13 @@ def run(protocol: protocol_api.ProtocolContext):
     # Instrument - ONLY ONE ACTIVE pls
     protocol.comment("-> Initialising instrument")
     #pipette = protocol.load_instrument("p300_single_gen2", "left", tip_racks=[tips]) # Mara
-    pipette = protocol.load_instrument("flex_1channel_1000", "left", tip_racks=[tips]) # Capy
-
+    pipette = protocol.load_instrument("flex_96channel_200", "left", tip_racks=[tips]) # Capy
+    pipette.configure_nozzle_layout(style=SINGLE, start="A1")
+    
     # -|===> MAIN <===|-
     protocol.home()
     protocol.comment("-|===> Starting Protocol <===|-")
-    pipette.pick_up_tip()
+    pipette.pick_up_tip(tips.wells()[0])
 
     # information
     default_aspirate = pipette.flow_rate.aspirate
@@ -50,20 +52,20 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment(f"The default aspirate rate is {default_aspirate} ul/s.")
     protocol.comment(f"The default dispense rate is {default_dispense} ul/s.")
     protocol.comment(f"The default blow-out rate is {default_blow_out} ul/s.")
+    for i in range(5):
+        # test 1: is the flow rate accurate?
+        protocol.comment("-> This liquid aspirate should take 10 seconds")
+        pipette.aspirate(100, reservoir.wells()[0], flow_rate=10)
+        protocol.comment("-> This liquid dispense should take 5 seconds")
+        pipette.dispense(100, reservoir.wells()[1], flow_rate=20)
 
-    # test 1: is the flow rate accurate?
-    protocol.comment("-> This liquid aspirate should take 10 seconds")
-    pipette.aspirate(1000, reservoir.wells()[0], flow_rate=100)
-    protocol.comment("-> This liquid dispense should take 5 seconds")
-    pipette.dispense(1000, hs_plate.wells()[0], flow_rate=200)
-
-    # test 2: what is the rate parameter?
-    pipette.flow_rate.aspirate = 200
-    pipette.flow_rate.dispense = 200
-    protocol.comment("-> Time this aspirate - it should be 10 seconds")
-    pipette.aspirate(1000, reservoir.wells()[0], rate=0.5)
-    protocol.comment("-> Time this dispense - it should be 2.5 seconds")
-    pipette.dispense(1000, hs_plate.wells()[1], rate=2.0)
+        # test 2: what is the rate parameter?
+        pipette.flow_rate.aspirate = 20
+        pipette.flow_rate.dispense = 20
+        protocol.comment("-> Time this aspirate - it should be 10 seconds")
+        pipette.aspirate(100, reservoir.wells()[0], rate=0.5)
+        protocol.comment("-> Time this dispense - it should be 2.5 seconds")
+        pipette.dispense(100, reservoir.wells()[1], rate=2.0)
 
     pipette.drop_tip()
     protocol.comment("<===|- Protocol Complete -|===>")
