@@ -58,7 +58,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 AutoSynthesis",
-    "description": "v0.5b: slowly_with_mixing as a (hashed-out) function, ready for synthesis, bug fix 22/07/26",
+    "description": "v0.5b: slowly_with_mixing as a (hashed-out) function, ready for synthesis, more bug fixes 22/07/26",
     "author": "JT-903"
 }
 
@@ -134,7 +134,7 @@ def run(protocol: protocol_api.ProtocolContext):
         liquid = anti_solvent_gen
     )
 
-    # Define a really nice and useful function
+    # Out of order - come back later
     '''
     def slowly_with_mixing(cycle_number: int):
         for j in range(cycle_number):
@@ -195,26 +195,23 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Add (trz) to wells slowly with mixing - after testing put this in a function?
     protocol.comment("-> Transferring trz slowly with mixing")
-    pipette.well_bottom_clearance.dispense = 21 # don't dip pipette in sample? probs not necessary
-    for i in range(sampleN):
-        pipette.pick_up_tip(tips.wells()[1+i])
-        pipette.aspirate(volB[i], reservoir.wells()[1])
-        # So the 'with mixing' bit is a bit ad hoc - pipette can't move while hs_mod is shaking
-        #slowly_with_mixing(cycleN[0]) # provided the code below went well
-        #'''
-        for j in range(cycleN[0]):
+    pipette.well_bottom_clearance.dispense = 21 # don't dip pipette in sample
+    pipette.pick_up_tip(tips.wells()[1])
+    for j in range(cycleN[0]): # this could be optimised
+        for i in range(sampleN):
+            pipette.aspirate(volB[i]/cycleN[0], reservoir.wells()[1])
             pipette.dispense(volB[i]/cycleN[0], hs_plate.wells()[i], rate=0.5)
-            hs_mod.set_and_wait_for_shake_speed(200) # valid range 200-3000 RPM
-            protocol.delay(seconds=timeDelay[0])
-            hs_mod.deactivate_shaker()
-        #'''
+        # So the 'with mixing' bit is a bit ad hoc - pipette can't move while hs_mod is shaking
+        hs_mod.set_and_wait_for_shake_speed(200) # valid range 200-3000 RPM
+        protocol.delay(seconds=timeDelay[0])
+        hs_mod.deactivate_shaker()
     pipette.drop_tip()
 
     # Add ammonium cyanate to wells
     protocol.comment("-> Transferring ammonium thiocyanate")
-    pipette.well_bottom_clearance.dispense = 1 # see trz above if this is necessary
+    pipette.well_bottom_clearance.dispense = 1 # reset after trz
     for i in range(sampleN):
-        pipette.pick_up_tip(tips.wells()[1+sampleN+i])
+        pipette.pick_up_tip(tips.wells()[2+i])
         pipette.aspirate(volC[i], reservoir.wells()[2])
         pipette.dispense(volC[i], hs_plate.wells()[i], rate=3.0)
         pipette.drop_tip()
@@ -226,7 +223,7 @@ def run(protocol: protocol_api.ProtocolContext):
         if volAnti[i] == 0:
             k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
         else:
-            pipette.pick_up_tip(tips.wells()[1+2*sampleN+i])
+            pipette.pick_up_tip(tips.wells()[2+sampleN+i-k])
             pipette.transfer_with_liquid_class(antiClass, volAnti[i], reservoir.wells()[3], hs_plate.wells()[i], new_tip="never")
             pipette.drop_tip()
 
