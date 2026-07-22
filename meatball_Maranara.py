@@ -73,7 +73,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
     hs_plate = protocol.load_labware("nest_24_wellplate_10.4ml", 6)
-    '''
+    #'''
 
     # Trash is fixed in slot 12
 
@@ -147,17 +147,12 @@ def run(protocol: protocol_api.ProtocolContext):
     volC = [1000]
     volAnti = [0]
     timeDelay = [15]
-    '''
+    #'''
 
     # -|===> MAIN <===|-
     protocol.home()
     antiClass = protocol.get_liquid_class("ethanol_80") # used for anti-solvent transfer - volatile
     protocol.comment("-|===> Starting Protocol <===|-")
-    ''' Notes to self:
-    0) no manual review so far on the code procedure
-    1) mild error checking is here!!
-    2) the .json file data can be imported successfully!
-    '''
     
     for i in range(len(samples)):
         protocol.comment(f"-|=> Sample {i+1}")
