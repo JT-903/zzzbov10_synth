@@ -7,6 +7,7 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 - JSON file integration: store up to 24 sets of sample parameters (volumes, mixing times) in `sampledata.json` and they will be carried out sequentially.
     - Unfortunately, this won't simply work on the robot, as the JSON file cannot be uploaded to it. [The API documentation implies this is possible, and files (CSV in their example) can be stored on the robot: https://docs.opentrons.com/python-api/runtime-parameters/defining/]
     - A possible workaround to this is to use the Jupyter notebook server running on the robot at port 48888. Note that all files in the notebook are stored on the robot, so there could still be a struggle there.
+    - Due to implementation, only the first mixing time and cycle number will be used. However, these quantities must be present for all samples.
 - Heater-shaker module: the implementation is a bit janky for now, but the shake mode can be used to mix the (trz) into the cobalt solution. Alternatively, the hard code can be edited to disable it.
 - Antisolvent is supported, and a volume of it is required (or set it to zero and it will be automatically skipped).
 - Mara: The alternative to `main.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 22/07/26, the protocols for Mara are a version behind.

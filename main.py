@@ -58,7 +58,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 AutoSynthesis",
-    "description": "v0.5a: slowly_with_mixing as a (hashed-out) function, ready for synthesis 22/07/26",
+    "description": "v0.5b: slowly_with_mixing as a (hashed-out) function, ready for synthesis, bug fix 22/07/26",
     "author": "JT-903"
 }
 
@@ -173,6 +173,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # -|===> MAIN <===|-
     protocol.home()
     antiClass = protocol.get_liquid_class("ethanol_80") # used for anti-solvent transfer - volatile
+    sampleN = len(samples)
     protocol.comment("-|===> Starting Protocol <===|-")
     ''' Notes for users:
     1) k is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the mixing loop index.
@@ -185,46 +186,47 @@ def run(protocol: protocol_api.ProtocolContext):
     3) The Heater-Shaker can be placed "anywhere" on the Flex according to the API. It cannot be placed on D2, C2, B2, A2 (OT-2 placement rules).
     '''
     
-    k = 0
-    for i in range(len(samples)):
-        protocol.comment(f"-|=> Sample {i+1}")
-
-        # Add cobalt nitrate to well
-        protocol.comment("-> Transferring cobalt nitrate")
-        pipette.pick_up_tip(tips.wells()[4*i-k])
+    # Add cobalt nitrate to wells
+    protocol.comment("-> Transferring cobalt nitrate")
+    pipette.pick_up_tip(tips.wells()[0])
+    for i in range(sampleN):
         pipette.transfer(volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
-        pipette.drop_tip()
+    pipette.drop_tip()
 
-        # Add (trz) to well slowly with mixing - after testing put this in a function?
-        protocol.comment("-> Transferring trz slowly with mixing")
-        pipette.well_bottom_clearance.dispense = 21 # don't dip pipette in sample? probs not necessary
-        pipette.pick_up_tip(tips.wells()[4*i+1-k])
+    # Add (trz) to wells slowly with mixing - after testing put this in a function?
+    protocol.comment("-> Transferring trz slowly with mixing")
+    pipette.well_bottom_clearance.dispense = 21 # don't dip pipette in sample? probs not necessary
+    for i in range(sampleN):
+        pipette.pick_up_tip(tips.wells()[1+i])
         pipette.aspirate(volB[i], reservoir.wells()[1])
         # So the 'with mixing' bit is a bit ad hoc - pipette can't move while hs_mod is shaking
-        #slowly_with_mixing(cycleN[i]) # provided the code below went well
+        #slowly_with_mixing(cycleN[0]) # provided the code below went well
         #'''
-        for j in range(cycleN[i]):
-            pipette.dispense(volB[i]/cycleN[i], hs_plate.wells()[i], rate=0.5)
+        for j in range(cycleN[0]):
+            pipette.dispense(volB[i]/cycleN[0], hs_plate.wells()[i], rate=0.5)
             hs_mod.set_and_wait_for_shake_speed(200) # valid range 200-3000 RPM
-            protocol.delay(seconds=timeDelay[i])
+            protocol.delay(seconds=timeDelay[0])
             hs_mod.deactivate_shaker()
         #'''
-        pipette.drop_tip()
+    pipette.drop_tip()
 
-        # Add ammonium cyanate to well
-        protocol.comment("-> Transferring ammonium thiocyanate")
-        pipette.well_bottom_clearance.dispense = 1 # see trz above if this is necessary
-        pipette.pick_up_tip(tips.wells()[4*i+2-k])
+    # Add ammonium cyanate to wells
+    protocol.comment("-> Transferring ammonium thiocyanate")
+    pipette.well_bottom_clearance.dispense = 1 # see trz above if this is necessary
+    for i in range(sampleN):
+        pipette.pick_up_tip(tips.wells()[1+sampleN+i])
         pipette.aspirate(volC[i], reservoir.wells()[2])
         pipette.dispense(volC[i], hs_plate.wells()[i], rate=3.0)
         pipette.drop_tip()
 
-        # Add anti-solvent to well
-        protocol.comment(f"-> Transferring{" no" if volAnti[i] == 0 else ""} anti-solvent")
+    # Add anti-solvent to wells
+    protocol.comment(f"-> Transferring anti-solvent")
+    k = 0
+    for i in range(sampleN):
         if volAnti[i] == 0:
             k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
         else:
-            pipette.pick_up_tip(tips.wells()[4*i+3-k])
+            pipette.pick_up_tip(tips.wells()[1+2*sampleN+i])
             pipette.transfer_with_liquid_class(antiClass, volAnti[i], reservoir.wells()[3], hs_plate.wells()[i], new_tip="never")
             pipette.drop_tip()
 
