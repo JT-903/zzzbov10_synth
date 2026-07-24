@@ -73,8 +73,8 @@ def run(protocol: protocol_api.ProtocolContext):
     reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "B1")
     #''' # with hs_mod
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D1") # might have to be D3 given box restrictions
-    hs_adapter = hs_mod.load_adapter("opentrons_96_flat_bottom_adapter") # opentrons_universal_flat_adapter is the one we have
-    hs_plate = hs_adapter.load_labware("nest_96_wellplate_200ul_flat") # placeholder - no checks to see if volume is exceeded
+    hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
+    hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - no checks to see if volume is exceeded
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
     hs_plate = protocol.load_labware("nest_96_wellplate_2ml_deep", "D1")

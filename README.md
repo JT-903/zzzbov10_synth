@@ -30,3 +30,29 @@ Miscellaneous:
 - These can be found in `logs/[date]` as `LOGBOOK.md`.
 - 21.07.26: Capy performed initial testing.
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
+
+# Appendix
+
+## Complete list of adapters and compatible plates/tube racks
+
+Note that many of the well plates and all tube racks in the labware library are not compatible with any adapter.
+
+##### opentrons_universal_flat_adapter
+- axygen_96_wellplate_500ul
+- corning_384_wellplate_112ul_flat
+- corning_96_wellplate_360ul_flat
+- corning_falcon_384_wellplate_130ul_flat
+- greiner_384_wellplate_240ul
+- ibidi_96_square_well_plate_300ul
+- nest_24_wellplate_10.4ml
+##### opentrons_universal_flat_adapter_type_b
+- milliplex_r_96_well_microtiter_plate
+- thermofisher_nunc_maxisorp_lockwell_elisa
+##### opentrons_96_deep_well_adapter
+- nest_96_wellplate_2ml_deep
+##### opentrons_96_flat_bottom_adapter
+- nest_96_wellplate_200ul_flat
+##### opentrons_96_pcr_adapter
+- biorad_96_wellplate_200ul_pcr
+- nest_96_wellplate_100ul_pcr_full_skirt
+- opentrons_96_wellplate_200ul_pcr_full_skirt
