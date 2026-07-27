@@ -132,7 +132,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Loading sample parameters")
     try:
         samples = EXAMPLE_DATA # the hashed-out code below is probably not useful
-        #with open("sampledata.json", "r") as f:
+        #with open("sampledataA.json", "r") as f:
             #samples = json.load(f)
         is_valid, msg = validate_sample_parameters(samples)
         if not is_valid:

@@ -1,0 +1,163 @@
+from opentrons import protocol_api
+from opentrons.protocol_api import SINGLE, ROW, COLUMN, ALL
+import json
+
+# stealing clara's code but modifying it to fit my script
+EXAMPLE_DATA = json.loads("""[
+    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "delay_time": 120},
+    {"sample_id": 2, "vol_a": 200, "vol_b": 200, "delay_time": 60},
+    {"sample_id": 3, "vol_a": 200, "vol_b": 200, "delay_time": 180}
+]""") # vol_a, vol_b, delay_time are the only values used as the protocol is very simple
+
+def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
+    """Validate sample parameters (dict-based version)."""
+    max_samples = 24
+
+    if not samples:
+        return False, "No samples provided"
+    if len(samples) > max_samples:
+        return False, f"Too many samples for this protocol: {len(samples)} (max {max_samples})"
+
+    for sample in samples:
+        vol_a = sample["vol_a"]
+        vol_b = sample["vol_b"]
+        delay_time = sample["delay_time"]
+        sid = sample["sample_id"]
+
+        if vol_a < 0 or vol_a > 200:
+            return False, f"Sample {sid}: vol_a must be 0-200 µL, got {vol_a}"
+        if vol_b < 0 or vol_b > 200:
+            return False, f"Sample {sid}: vol_b must be 0-200 µL, got {vol_b}"
+        if delay_time < 0 or delay_time > 600:
+            return False, f"Sample {sid}: mixing time must be 0-600 s, got {delay_time}"
+
+    return True, "All samples valid"
+
+def samples_to_lists(samples) -> tuple[list[float], list[float], list[float]]:
+    """Convert dict-based sample parameters to lists."""
+
+    vol_a_list = [s["vol_a"] for s in samples]
+    vol_b_list = [s["vol_b"] for s in samples]
+    delay_time_list = [s["delay_time"] for s in samples]
+
+    return vol_a_list, vol_b_list, delay_time_list
+
+# Back to my code
+
+# This isn't necessary
+metadata = {
+    "protocolName": "Cu/Zn analogue AutoSynthesis",
+    "description": "v0.5c: completely separate from method A, ready for synthesis, 27/07/26",
+    "author": "JT-903"
+}
+
+# THIS IS NECESSARY
+requirements = {"robotType": "Flex", "apiLevel": "2.27"}
+
+def run(protocol: protocol_api.ProtocolContext):
+    # Labware - best configuration? avoids collisions
+    protocol.comment("-> Initialising deck")
+    tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "C2")
+    reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "B1")
+    #''' # with hs_mod
+    hs_mod = protocol.load_module("heaterShakerModuleV1", "D1") # might have to be D3 given box restrictions
+    hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
+    hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - no checks to see if volume is exceeded
+    hs_mod.close_labware_latch()
+    ''' # no hs_mod - look through and hash out 2 lines
+    hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D1")
+    #'''
+
+    # Trash
+    trash = protocol.load_trash_bin("A3")
+
+    # Instrument
+    protocol.comment("-> Initialising instrument")
+    #pipette = protocol.load_instrument("flex_1channel_1000", "right", tip_racks=[tips])
+    #''' # For multi-channel pipette
+    pipette = protocol.load_instrument("flex_96channel_200", tip_racks=[tips])
+    pipette.configure_nozzle_layout(style=SINGLE, start="H12") # lessons were learned
+    #'''
+
+    # Define liquids in reservoir - makes it pretty in the opentrons app
+    copper_thiocyanate = protocol.define_liquid(
+        name = "Metal(II) thiocyanate",
+        description = "dilute solution in acetone, x M",
+        display_color = "#FF0000"
+    )
+    trz_ligand = protocol.define_liquid(
+        name = "1,2,4-triazole",
+        description = "solution in acetone, 5x M",
+        display_color = "#67718A"
+    )
+
+    reservoir.load_liquid(
+        wells = ["A1"],
+        volume = 2500,
+        liquid = copper_thiocyanate
+    )
+    reservoir.load_liquid(
+        wells = ["A2"],
+        volume = 2500,
+        liquid = trz_ligand
+    )
+
+    # Task file integration
+    protocol.comment("-> Loading sample parameters")
+    try:
+        samples = EXAMPLE_DATA # the hashed-out code below is probably not useful
+        #with open("sampledataB.json", "r") as f:
+            #samples = json.load(f)
+        is_valid, msg = validate_sample_parameters(samples)
+        if not is_valid:
+            raise ValueError(msg)
+        protocol.comment(f"Loaded {len(samples)} samples from JSON")
+    except Exception as e:
+        protocol.comment(f"ERROR: Failed to load samples: {str(e)}")
+        raise
+    
+    #''' Data from the file
+    volA, volB, timeDelay = samples_to_lists(samples)
+    ''' # Default data instead of the file
+    samples = ["lol"]
+    volA = [1000]
+    volB = [1000]
+    timeDelay = [10]
+    #'''
+
+    # -|===> MAIN <===|-
+    protocol.home()
+    antiClass = protocol.get_liquid_class("ethanol_80") # used for both solvent transfers - volatile
+    protocol.comment("-|===> Starting Protocol <===|-")
+    ''' Notes for users:
+    1) k is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the mixing loop index.
+        - Please do not try to redefine them. I don't know how spectacularly the rest of the program will break.
+    '''
+    
+    # Add metal thiocyanate to wells
+    protocol.comment("-> Transferring metal thiocyanate")
+    #pipette.well_bottom_clearance.aspirate = 0.5 # if there is trouble with residual liquid in the reservoir
+    pipette.pick_up_tip(tips.wells()[0])
+    for i in range(len(samples)):
+        pipette.transfer_with_liquid_class(antiClass, volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
+    pipette.drop_tip()
+
+    # Add (trz) to wells
+    protocol.comment("-> Transferring 1,2,4-triazole")
+    for i in range(len(samples)):
+        pipette.pick_up_tip(tips.wells()[1+i])
+        pipette.transfer_with_liquid_class(antiClass, volB[i], reservoir.wells()[1], hs_plate.wells()[i], new_tip="never")
+        pipette.drop_tip()
+
+    # Stirring and concentrating
+    protocol.comment("-> Stirring and concentrating")
+    concTask = hs_mod.set_target_temperature(55)
+    hs_mod.set_and_wait_for_shake_speed(300)
+    protocol.wait_for_tasks([concTask])
+    protocol.delay(seconds=timeDelay[0])
+    hs_mod.deactivate_heater()
+    hs_mod.deactivate_shaker()
+
+    # Finalising
+    pipette.home()
+    protocol.comment("<===|- Protocol Complete -|===>")

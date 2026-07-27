@@ -36,7 +36,7 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
         if vol_anti < 0 or vol_anti > 200:
             return False, f"Sample {sid}: vol_anti must be 0-200 µL, got {vol_anti}"
         if delay_time < 0 or delay_time > 60:
-            return False, f"Sample {sid}: mixing time must be 0-60s, got {delay_time}"
+            return False, f"Sample {sid}: mixing time must be 0-60 s, got {delay_time}"
         if cycle_n < 1 or not isinstance(cycle_n, int):
             return False, f"Sample {sid}: number of mixing cycles must be a positive integer, got {cycle_n}"
 
@@ -77,7 +77,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - no checks to see if volume is exceeded
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
-    hs_plate = protocol.load_labware("nest_96_wellplate_2ml_deep", "D1")
+    hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D1")
     #'''
 
     # Trash
@@ -93,7 +93,7 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Define liquids in reservoir - makes it pretty in the opentrons app
     cobalt_nitrate = protocol.define_liquid(
-        name = "Cobalt(II) nitrate",
+        name = "Metal(II) nitrate",
         description = "solution in water, 0.67 M",
         display_color = "#FF0000"
     )
@@ -138,7 +138,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Loading sample parameters")
     try:
         samples = EXAMPLE_DATA # the hashed-out code below is probably not useful
-        #with open("sampledata.json", "r") as f:
+        #with open("sampledataA.json", "r") as f:
             #samples = json.load(f)
         is_valid, msg = validate_sample_parameters(samples)
         if not is_valid:
@@ -168,15 +168,10 @@ def run(protocol: protocol_api.ProtocolContext):
     ''' Notes for users:
     1) k is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the mixing loop index.
         - Please do not try to redefine them. I don't know how spectacularly the rest of the program will break.
-    To self:
-    1) For some reason, the SINGLE 96-pipette throws a hissy fit when pick_up_tip locations aren't specified.
-        - Failing to specify tip locations gives an OutOfTipsError with no further information.
-    2) The SINGLE flow rate on the 1000 ul 96-pipette is really slow - default is 160 ul/s.
-        - The 200 ul 96-pipette is only 15 ul/s.
     '''
     
-    # Add cobalt nitrate to wells
-    protocol.comment("-> Transferring cobalt nitrate")
+    # Add metal nitrate to wells
+    protocol.comment("-> Transferring metal nitrate")
     #pipette.well_bottom_clearance.aspirate = 0.5 # if there is trouble with residual liquid in the reservoir
     pipette.pick_up_tip(tips.wells()[0])
     for i in range(sampleN):
@@ -184,7 +179,7 @@ def run(protocol: protocol_api.ProtocolContext):
     pipette.drop_tip()
 
     # Add (trz) to wells slowly with mixing
-    protocol.comment("-> Transferring trz slowly with mixing")
+    protocol.comment("-> Transferring 1,2,4-triazole slowly with mixing")
     pipette.well_bottom_clearance.dispense = 21 # don't dip pipette in sample
     dist_list = [elem/cycleN[0] for elem in volB]
 

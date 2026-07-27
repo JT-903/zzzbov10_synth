@@ -31,6 +31,8 @@ Make sure to triple check everything, and modify reservoir and plate in code/on 
 
 Failure modes:
 - Well bottom clearance for (trz) dispensing may be far too high. Be ready to stop the procedure, then edit the code to rerun.
+- Pipette cannot reach last bit of liquid in the reservoir. Stop the procedure, then transfer to smaller well reservoir or top up reservoir.
+    - Prevention (partially): use 12-well reservoir instead of 4-well reservoir
 - Ethanol is a volatile liquid. Volatile liquids have not been tested yet. Be ready to stop the procedure. DO NOT CONTINUE IF HANDLING IS A PROBLEM - more tests will be necessary.
 
 # Results
