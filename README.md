@@ -4,15 +4,18 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 
 ## Features
 
-- JSON file integration: store up to 24 sets of sample parameters (volumes, mixing times) in `sampledata.json` and they will be carried out sequentially.
+- JSON file integration: store up to 47/95 (methods A/B respectively) sets of sample parameters (volumes, mixing times) in `sampledata.json` and they will be carried out concurrently.
     - Unfortunately, this won't simply work on the robot, as the JSON file cannot be uploaded to it. [The API documentation implies this is possible, and files (CSV in their example) can be stored on the robot: https://docs.opentrons.com/python-api/runtime-parameters/defining/]
     - A possible workaround to this is to use the Jupyter notebook server running on the robot at port 48888. Note that all files in the notebook are stored on the robot, so there could still be a struggle there.
     - Due to implementation, only the first mixing time and cycle number will be used. However, these quantities must be present for all samples (they can be set to 0 and 1 respectively if desired).
-- Heater-shaker module: the implementation is a bit janky for now, but the shake mode can be used to mix the (trz) into the cobalt solution. Alternatively, the hardcode can be edited to disable it.
+- Heater-shaker module: the shake mode can be used to mix the triazole into the cobalt solution. Alternatively, the hardcode can be edited to disable it.
+    - This has limited effectiveness on tall narrow wells, and should work better on wide wells.
 - Antisolvent is supported, and a volume of it is required (or set it to zero and it will be skipped).
-- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 24/07/26, the protocols for Mara are up to date.
+- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 27/07/26, the protocol for Mara is one version behind.
+- Image capture: after any Flex method is run, the robot can capture an image every hour for 48 hours. Currently disabled.
 - The method A script should be used for Mn, Fe, Co, Ni, and Zn; the method B script should be used only for Cu and Zn.
-    - In order to yield the beta-Ni phase, the starting solution of nickel nitrate should be acidified with nitric acid.
+    - In order to yield the beta-Ni phase, the starting solutions should be made up in nitric acid.
+- Variant script: in `methodA_variant.py`, the thiocyanate is added before the triazole. FIHM group data shows this should work.
 
 ## Notes and Observations
 
@@ -20,6 +23,7 @@ Modularity:
 - When switching pipettes, any command with a `flow_rate` parameter also had to be edited. As such, all of these have been replaced with the `rate` parameter for easier switching of pipettes.
 - Issue: Labware and adapters need to be compatible when the heater-shaker is being used, or a LabwareCannotBeStackedError is raised. To not receive this error, see the appendix for known matches or create a custom labware definition (or lie to the robot).
 - Warning: JSON files made for method A are not compatible with method B, as the `delay_time` parameter is used very differently, and vice versa.
+    - Method A JSON files are compatible with the variant method, but the variant method has a maximum sample number of 31.
 
 AI Compatibility:
 - Issue: When using a multi-channel pipette in SINGLE nozzle configuration, `pick_up_tip` locations must be specified or the pipette will raise an OutOfTipsError. This does not affect the prewritten scripts in `protocols` as tip tracking is hardcoded in, but if the AI were to write its own script it should be prompted to specify tip locations.
@@ -27,9 +31,9 @@ AI Compatibility:
 
 Miscellaneous:
 - Flow rates in multi-channel pipettes are much slower than single-channel pipettes of the same volume.
-- Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors and the UI adds a massive amount of unlabelled fluid to any overflowing wells (for reasons unknown). Robot response pending.
-    - The Opentrons app fills non-empty wells that aren't full yet but will overflow later in the procedure with this unlabelled fluid as well. Even when the liquids in the reservoir are unlabelled, the extra unlabelled fluid is still added. The unlabelled fluid amount is independent of the well capacity, but dependent on how much liquid is added to the well.
+- Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors. Robot response pending.
     - This "issue" could be an advantage, as it is possible to lie to the machine about 3D printed or non-standard plates that have been designed to fit both the heater-shaker and the relevant adapter. This would skip having to create custom labware definitions.
+    - The Opentrons app UI bug happens even if the well doesn't overflow, so has been removed from this point.
 
 ## Obligatory mention of *datalab*
 
@@ -40,6 +44,7 @@ Miscellaneous:
 - These can be found in `logs/[date]` as `LOGBOOK.md`.
 - 21.07.26: Capy performed initial testing.
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
+- 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate.
 
 # Appendix
 
@@ -47,9 +52,13 @@ Miscellaneous:
 
 Note that many of the well plates and all tube racks in the labware library are not compatible with any heater-shaker adapter.
 
-Without custom labware definitions, the universal adapter only supports 384-, 96-, and 24-well plates. The type B universal adapter only supports 96-well plates.
+Without custom labware definitions: 
+- The universal adapter only supports 384-, 96-, and 24-well plates.
+- The type B universal adapter only supports 96-well plates.
 
 Most of this information is not present on the labware library or the API documentation. A small amount is present as retired/deprecated "combination" labware.
+
+These lists were collected using the `adapter_compatibility_tester.py` script. Each adapter should be checked after every API release. More information about running this script can be found in the script.
 
 ##### opentrons_universal_flat_adapter
 - axygen_96_wellplate_500ul

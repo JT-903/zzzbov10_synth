@@ -11,7 +11,7 @@ EXAMPLE_DATA = json.loads("""[
 
 def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
     """Validate sample parameters (dict-based version)."""
-    max_samples = 47
+    max_samples = 31
 
     if not samples:
         return False, "No samples provided"
@@ -59,7 +59,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 AutoSynthesis",
-    "description": "v0.6a: camera integration, more lessons learned, ready for synthesis, 29/07/26",
+    "description": "v0.6a: swapped trz and SCN additions, ready for synthesis, 29/07/26",
     "author": "JT-903"
 }
 
@@ -71,12 +71,12 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Initialising deck")
     tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "B2")
     reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "C1")
-    #''' # with hs_mod
+    ''' with hs_mod
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - no checks to see if volume is exceeded
     hs_mod.close_labware_latch()
-    ''' # no hs_mod - look through and hash out 2 lines
+    ''' # no hs_mod
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
     #'''
 
@@ -86,7 +86,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # Instrument
     protocol.comment("-> Initialising instrument")
     #pipette = protocol.load_instrument("flex_1channel_1000", "right", tip_racks=[tips])
-    #''' # For multi-channel pipette
+    #''' For multi-channel pipette
     pipette = protocol.load_instrument("flex_96channel_200", tip_racks=[tips])
     pipette.configure_nozzle_layout(style=SINGLE, start="H12") # lessons were learned
     #'''
@@ -179,27 +179,12 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette.transfer(volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
     pipette.drop_tip()
 
-    # Add (trz) to wells slowly with mixing
-    protocol.comment("-> Transferring 1,2,4-triazole slowly with mixing")
-    pipette.well_bottom_clearance.dispense = 30 # KNOWN HARDWARE ISSUE - should go away with custom labware definition
-    dist_list = [elem/cycleN[0] for elem in volB]
-
-    pipette.pick_up_tip(tips.wells()[1])
-    for j in range(cycleN[0]):
-        pipette.distribute(dist_list, reservoir.wells()[2], hs_plate.wells()[:sampleN], new_tip="never", disposal_volume=5, touch_tip=True)
-        # pipette can't move while hs_mod is shaking
-        hs_mod.set_and_wait_for_shake_speed(1200) # valid range 200-3000 RPM
-        protocol.delay(seconds=timeDelay[0])
-        hs_mod.deactivate_shaker()
-    pipette.drop_tip()
-
     # Add ammonium thiocyanate to wells
     protocol.comment("-> Transferring ammonium thiocyanate")
-    pipette.well_bottom_clearance.dispense = 1 # reset after trz
     for i in range(sampleN):
-        pipette.pick_up_tip(tips.wells()[2+i])
+        pipette.pick_up_tip(tips.wells()[1+i])
         pipette.aspirate(volC[i], reservoir.wells()[4])
-        pipette.dispense(volC[i], hs_plate.wells()[i], rate=3.0)
+        pipette.dispense(volC[i], hs_plate.wells()[i])
         pipette.dynamic_mix(
             aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
             dispense_start_location=hs_plate.wells()[i].bottom(z=20),
@@ -209,6 +194,21 @@ def run(protocol: protocol_api.ProtocolContext):
         )
         pipette.drop_tip()
 
+    # Add (trz) to wells rapidly
+    protocol.comment("-> Transferring 1,2,4-triazole")
+    for i in range(sampleN):
+        pipette.pick_up_tip(tips.wells()[1+sampleN+i])
+        pipette.aspirate(volC[i], reservoir.wells()[2])
+        pipette.dispense(volC[i], hs_plate.wells()[i], rate=3.0)
+        pipette.dynamic_mix(
+            aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
+            dispense_start_location=hs_plate.wells()[i].bottom(z=20),
+            repetitions=3,
+            volume=200,
+            rate=3.0
+        ) # this could cause precipitation of product at higher concentrations - modify for big crystal
+        pipette.drop_tip()
+
     # Add anti-solvent to wells
     protocol.comment("-> Transferring anti-solvent")
     k = 0
@@ -216,7 +216,7 @@ def run(protocol: protocol_api.ProtocolContext):
         if volAnti[i] == 0:
             k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
         else:
-            pipette.pick_up_tip(tips.wells()[2+sampleN+i-k])
+            pipette.pick_up_tip(tips.wells()[1+2*sampleN+i-k])
             pipette.transfer_with_liquid_class(antiClass, volAnti[i], reservoir.wells()[6], hs_plate.wells()[i], new_tip="never")
             pipette.dynamic_mix(
                 aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
@@ -229,7 +229,6 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Finalising
     pipette.home()
-    hs_mod.open_labware_latch()
     protocol.comment("<===|- Protocol Complete -|===>")
     ''' Camera integration
     for i in range(48):

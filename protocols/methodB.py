@@ -11,7 +11,7 @@ EXAMPLE_DATA = json.loads("""[
 
 def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
     """Validate sample parameters (dict-based version)."""
-    max_samples = 24
+    max_samples = 95
 
     if not samples:
         return False, "No samples provided"
@@ -47,7 +47,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float]]:
 # This isn't necessary
 metadata = {
     "protocolName": "Cu/Zn analogue AutoSynthesis",
-    "description": "v0.5c: completely separate from method A, ready for synthesis, 27/07/26",
+    "description": "v0.5d: completely separate from method A, camera integration, ready for synthesis, 28/07/26",
     "author": "JT-903"
 }
 
@@ -57,15 +57,15 @@ requirements = {"robotType": "Flex", "apiLevel": "2.27"}
 def run(protocol: protocol_api.ProtocolContext):
     # Labware - best configuration? avoids collisions
     protocol.comment("-> Initialising deck")
-    tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "C2")
-    reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "B1")
+    tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "B2")
+    reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "C1")
     #''' # with hs_mod
-    hs_mod = protocol.load_module("heaterShakerModuleV1", "D1") # might have to be D3 given box restrictions
+    hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - no checks to see if volume is exceeded
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
-    hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D1")
+    hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
     #'''
 
     # Trash
@@ -97,7 +97,7 @@ def run(protocol: protocol_api.ProtocolContext):
         liquid = copper_thiocyanate
     )
     reservoir.load_liquid(
-        wells = ["A2"],
+        wells = ["A3"],
         volume = 2500,
         liquid = trz_ligand
     )
@@ -129,10 +129,6 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.home()
     antiClass = protocol.get_liquid_class("ethanol_80") # used for both solvent transfers - volatile
     protocol.comment("-|===> Starting Protocol <===|-")
-    ''' Notes for users:
-    1) k is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the mixing loop index.
-        - Please do not try to redefine them. I don't know how spectacularly the rest of the program will break.
-    '''
     
     # Add metal thiocyanate to wells
     protocol.comment("-> Transferring metal thiocyanate")
@@ -146,13 +142,13 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Transferring 1,2,4-triazole")
     for i in range(len(samples)):
         pipette.pick_up_tip(tips.wells()[1+i])
-        pipette.transfer_with_liquid_class(antiClass, volB[i], reservoir.wells()[1], hs_plate.wells()[i], new_tip="never")
+        pipette.transfer_with_liquid_class(antiClass, volB[i], reservoir.wells()[2], hs_plate.wells()[i], new_tip="never")
         pipette.drop_tip()
 
     # Stirring and concentrating
-    protocol.comment("-> Stirring and concentrating")
-    concTask = hs_mod.set_target_temperature(55)
-    hs_mod.set_and_wait_for_shake_speed(300)
+    protocol.comment("-> Mixing and concentrating")
+    concTask = hs_mod.set_target_temperature(55) # DO NOT GO ABOVE 56
+    hs_mod.set_and_wait_for_shake_speed(1200)
     protocol.wait_for_tasks([concTask])
     protocol.delay(seconds=timeDelay[0])
     hs_mod.deactivate_heater()
@@ -160,4 +156,10 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Finalising
     pipette.home()
+    hs_mod.open_labware_latch()
     protocol.comment("<===|- Protocol Complete -|===>")
+    ''' Camera integration
+    for i in range(48):
+        protocol.delay(minutes=60)
+        protocol.capture_image(filename=f"snapshot{i}")
+    #'''
