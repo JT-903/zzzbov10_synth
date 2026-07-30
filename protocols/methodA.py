@@ -59,7 +59,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 AutoSynthesis",
-    "description": "v0.6a: camera integration, more lessons learned, ready for synthesis, 29/07/26",
+    "description": "v0.6b: camera integration, more lessons learned, ready for synthesis, 30/07/26",
     "author": "JT-903"
 }
 
@@ -74,10 +74,10 @@ def run(protocol: protocol_api.ProtocolContext):
     #''' # with hs_mod
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
-    hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - no checks to see if volume is exceeded
+    hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - custom labware doesn't fit on adapters yet
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
-    hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
+    hs_plate = protocol.load_labware("sunlab_96_vialrack_800ul", "D3")
     #'''
 
     # Trash

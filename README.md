@@ -33,7 +33,6 @@ Miscellaneous:
 - Flow rates in multi-channel pipettes are much slower than single-channel pipettes of the same volume.
 - Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors. Robot response pending.
     - This "issue" could be an advantage, as it is possible to lie to the machine about 3D printed or non-standard plates that have been designed to fit both the heater-shaker and the relevant adapter. This would skip having to create custom labware definitions.
-    - The Opentrons app UI bug happens even if the well doesn't overflow, so has been removed from this point.
 
 ## Obligatory mention of *datalab*
 
@@ -44,13 +43,15 @@ Miscellaneous:
 - These can be found in `logs/[date]` as `LOGBOOK.md`.
 - 21.07.26: Capy performed initial testing.
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
-- 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate.
+- 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate. Yield okay (44-60%).
 
 # Appendix
 
 ## Complete list of heater-shaker adapters and compatible plates/tube racks
 
 Note that many of the well plates and all tube racks in the labware library are not compatible with any heater-shaker adapter.
+
+As of writing, loading custom labware onto adapters is not yet supported .
 
 Without custom labware definitions: 
 - The universal adapter only supports 384-, 96-, and 24-well plates.
