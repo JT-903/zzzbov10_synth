@@ -11,7 +11,7 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 - Heater-shaker module: the shake mode can be used to mix the triazole into the cobalt solution. Alternatively, the hardcode can be edited to disable it.
     - This has limited effectiveness on tall narrow wells, and should work better on wide wells.
 - Antisolvent is supported, and a volume of it is required (or set it to zero and it will be skipped).
-- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 27/07/26, the protocol for Mara is one version behind.
+- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 27/07/26, the protocol for Mara is a few versions behind.
 - Image capture: after any Flex method is run, the robot can capture an image every hour for 48 hours. Currently disabled.
 - The method A script should be used for Mn, Fe, Co, Ni, and Zn; the method B script should be used only for Cu and Zn.
     - In order to yield the beta-Ni phase, the starting solutions should be made up in nitric acid.
@@ -51,7 +51,7 @@ Miscellaneous:
 
 Note that many of the well plates and all tube racks in the labware library are not compatible with any heater-shaker adapter.
 
-As of writing, loading custom labware onto adapters is not yet supported .
+As of writing, loading custom labware onto adapters is not yet supported.
 
 Without custom labware definitions: 
 - The universal adapter only supports 384-, 96-, and 24-well plates.

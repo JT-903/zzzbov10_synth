@@ -23,7 +23,6 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
         vol_b = sample["vol_b"]
         vol_c = sample["vol_c"]
         vol_anti = sample["vol_anti"]
-        delay_time = sample["delay_time"]
         cycle_n = sample["cycle_n"]
         sid = sample["sample_id"]
 
@@ -35,31 +34,28 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
             return False, f"Sample {sid}: vol_c must be 0-200 µL, got {vol_c}"
         if vol_anti < 0 or vol_anti > 200:
             return False, f"Sample {sid}: vol_anti must be 0-200 µL, got {vol_anti}"
-        if delay_time < 0 or delay_time > 60:
-            return False, f"Sample {sid}: mixing time must be 0-60 s, got {delay_time}"
         if cycle_n < 1 or not isinstance(cycle_n, int):
-            return False, f"Sample {sid}: number of mixing cycles must be a positive integer, got {cycle_n}"
+            return False, f"Sample {sid}: cycle number must be a positive integer, got {cycle_n}"
 
     return True, "All samples valid"
 
-def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], list[float], list[float], list[float]]:
+def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], list[float], list[float]]:
     """Convert dict-based sample parameters to lists."""
 
     vol_a_list = [s["vol_a"] for s in samples]
     vol_b_list = [s["vol_b"] for s in samples]
     vol_c_list = [s["vol_c"] for s in samples]
     vol_anti_list = [s["vol_anti"] for s in samples]
-    delay_time_list = [s["delay_time"] for s in samples]
     cycle_n_list = [s["cycle_n"] for s in samples]
 
-    return vol_a_list, vol_b_list, vol_c_list, vol_anti_list, delay_time_list, cycle_n_list
+    return vol_a_list, vol_b_list, vol_c_list, vol_anti_list, cycle_n_list
 
 # Back to my code
 
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "v0.6b: swapped trz and SCN additions, ready for synthesis, 30/07/26",
+    "description": "v0.6c: swapped trz and SCN additions, removed timeDelay, implemented cycleN, ready for synthesis, 31/07/26",
     "author": "JT-903"
 }
 
@@ -149,15 +145,14 @@ def run(protocol: protocol_api.ProtocolContext):
         raise
     
     #''' Data from the file
-    volA, volB, volC, volAnti, timeDelay, cycleN = samples_to_lists(samples)
+    volA, volB, volC, volAnti, cycleN = samples_to_lists(samples)
     ''' # Default data instead of the file
     samples = ["lol"]
-    volA = [1000]
-    volB = [1000]
-    volC = [1000]
+    volA = [200]
+    volB = [200]
+    volC = [200]
     volAnti = [0]
-    timeDelay = [10]
-    cycleN = [5]
+    cycleN = [4]
     #'''
 
     # -|===> MAIN <===|-
@@ -166,7 +161,7 @@ def run(protocol: protocol_api.ProtocolContext):
     sampleN = len(samples) # used for looping and indexing later
     protocol.comment("-|===> Starting Protocol <===|-")
     ''' Notes for users:
-    1) k is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the mixing loop index.
+    1) k is the tip tracking index; i is the sample index (which is also used for tip tracking).
         - Please do not try to redefine them. I don't know how spectacularly the rest of the program will break.
     2) There is no built-in concentrating step for the Mn and Zn analogues. This must be done separately.
     '''
@@ -188,7 +183,7 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette.dynamic_mix(
             aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
             dispense_start_location=hs_plate.wells()[i].bottom(z=20),
-            repetitions=3,
+            repetitions=cycleN[i],
             volume=200,
             rate=3.0
         )
@@ -203,7 +198,7 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette.dynamic_mix(
             aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
             dispense_start_location=hs_plate.wells()[i].bottom(z=20),
-            repetitions=3,
+            repetitions=cycleN[i],
             volume=200,
             rate=3.0
         ) # this could cause precipitation of product at higher concentrations - modify for big crystal
@@ -221,10 +216,10 @@ def run(protocol: protocol_api.ProtocolContext):
             pipette.dynamic_mix(
                 aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
                 dispense_start_location=hs_plate.wells()[i].bottom(z=20),
-                repetitions=3,
+                repetitions=cycleN[i],
                 volume=200,
                 rate=3.0
-            ) # this could cause precipitation of product at higher concentrations - modify for big crystal
+            ) # this could cause precipitation of product - modify for big crystal
             pipette.drop_tip()
 
     # Finalising

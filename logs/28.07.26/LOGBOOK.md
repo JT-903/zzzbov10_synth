@@ -46,8 +46,10 @@ Setup: 2x concentration used (2.5 mL solutions), position of tiprack and reservo
 Lessons learned:
 - Touch tip to get the last drop
 - Create a custom labware for the vial plate
+    - Or define an x,y-offset from the placeholder plate
 - Reduce cycles to 5 or maybe even 4?
 - Add mix steps after addition of ammonium thiocyanate and ethanol
+
 Other recommendation:
 - Use tall vials as the reservoirs - no problems with low solution levels
 
@@ -59,9 +61,15 @@ A possible idea from the meeting afterwards was to try a different ordering of a
 
 There is a large amount of blue precipitate and a small amount of red precipitate (the desired product) in the second sample. An attempt will be made to characterise it if it is still present on 30.07.
 
-30.07 report: the blue had mostly disappeared in sample 2, but was still present in sample 3. The blue in sample 2 could not be isolated because it soaked into the filter paper.
+30.07 report: the blue had somewhat disappeared in sample 2, but was still present in sample 3. The blue in sample 2 could not be isolated because it soaked into the filter paper - possibly soluble in ethanol(?).
 
-#### Yield
+## Yield
 - 25.7 mg of red precipitate was isolated from sample 2 (60% yield)
 - 1.4 mg of blue precipitate was isolated from sample 3 (awaiting identification)
 - 18.9 mg of mixed precipitate was collected from sample 3 (assuming all product, 44% yield)
+
+## Conclusions for next run
+
+- More mixing
+- Less stratifying
+- Less heater-shaker cycles at higher shake speeds

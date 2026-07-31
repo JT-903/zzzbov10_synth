@@ -120,8 +120,8 @@ def run(protocol: protocol_api.ProtocolContext):
     volA, volB, timeDelay = samples_to_lists(samples)
     ''' # Default data instead of the file
     samples = ["lol"]
-    volA = [1000]
-    volB = [1000]
+    volA = [200]
+    volB = [200]
     timeDelay = [10]
     #'''
 

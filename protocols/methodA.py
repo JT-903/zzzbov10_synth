@@ -152,9 +152,9 @@ def run(protocol: protocol_api.ProtocolContext):
     volA, volB, volC, volAnti, timeDelay, cycleN = samples_to_lists(samples)
     ''' # Default data instead of the file
     samples = ["lol"]
-    volA = [1000]
-    volB = [1000]
-    volC = [1000]
+    volA = [200]
+    volB = [200]
+    volC = [200]
     volAnti = [0]
     timeDelay = [10]
     cycleN = [5]
@@ -206,7 +206,7 @@ def run(protocol: protocol_api.ProtocolContext):
             repetitions=3,
             volume=200,
             rate=3.0
-        )
+        ) # this could cause precipitation of product at higher concentrations - modify for big crystal
         pipette.drop_tip()
 
     # Add anti-solvent to wells
@@ -224,7 +224,7 @@ def run(protocol: protocol_api.ProtocolContext):
                 repetitions=3,
                 volume=200,
                 rate=3.0
-            )
+            ) # this could cause precipitation of product - modify for big crystal
             pipette.drop_tip()
 
     # Finalising

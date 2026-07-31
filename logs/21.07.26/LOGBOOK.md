@@ -51,8 +51,8 @@ Pipette: 200 ul 96 channel pipette is the best option right now. Waiting on a 10
 ## Evaluation
 
 - See excel spreadsheet.
-- There is a ~ 0.1 s standard deviation in how long an aspirate/dispense action takes. This deviation could be in flow rates, robot movement, robot computer, etc.
-- Aspirates take on average ~ 1.5 s longer than dispenses.
+- There is a ~0.1 s standard deviation in how long an aspirate/dispense action takes. This deviation could be in flow rates, robot movement, robot computer, etc.
+- Aspirates take on average ~1.5 s longer than dispenses.
 
 ## Conclusions for next run
 
