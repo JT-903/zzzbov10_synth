@@ -63,8 +63,11 @@ There is a large amount of blue precipitate and a small amount of red precipitat
 
 30.07 report: the blue had somewhat disappeared in sample 2, but was still present in sample 3. The blue in sample 2 could not be isolated because it soaked into the filter paper - possibly soluble in ethanol(?).
 
+03.08 report: there was not enough isolated blue to perform PXRD on, and the blue present in the sample 3 mixture did not produce significantly visible peaks. My running theory is that it is cobalt triazolate, as it was not formed in Maria's acid run and is somewhat short-lived in the non-acid runs.
+
 ## Yield
-- 25.7 mg of red precipitate was isolated from sample 2 (60% yield)
+
+- 25.7 mg of red precipitate was isolated from sample 2 (60% yield, confirmed product by PXRD)
 - 1.4 mg of blue precipitate was isolated from sample 3 (awaiting identification)
 - 18.9 mg of mixed precipitate was collected from sample 3 (assuming all product, 44% yield)
 

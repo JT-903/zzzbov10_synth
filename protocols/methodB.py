@@ -4,8 +4,8 @@ import json
 
 # stealing clara's code but modifying it to fit my script
 EXAMPLE_DATA = json.loads("""[
-    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "delay_time": 120},
-    {"sample_id": 2, "vol_a": 200, "vol_b": 200, "delay_time": 60},
+    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "delay_time": 60},
+    {"sample_id": 2, "vol_a": 200, "vol_b": 200, "delay_time": 120},
     {"sample_id": 3, "vol_a": 200, "vol_b": 200, "delay_time": 180}
 ]""") # vol_a, vol_b, delay_time are the only values used as the protocol is very simple
 

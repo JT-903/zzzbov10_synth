@@ -4,9 +4,9 @@ import json
 
 # stealing clara's code but modifying it to fit my script
 EXAMPLE_DATA = json.loads("""[
-    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 0, "delay_time": 10, "cycle_n": 4},
+    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 0, "delay_time": 10, "cycle_n": 3},
     {"sample_id": 2, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 100, "delay_time": 5, "cycle_n": 4},
-    {"sample_id": 3, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 200, "delay_time": 0, "cycle_n": 4}
+    {"sample_id": 3, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 200, "delay_time": 0, "cycle_n": 5}
 ]""") # the datalab integration may have to directly inject the json file into here
 
 def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
