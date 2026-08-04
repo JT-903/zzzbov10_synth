@@ -31,7 +31,7 @@ AI Compatibility:
 
 Miscellaneous:
 - Flow rates in multi-channel pipettes are much slower than single-channel pipettes of the same volume.
-- Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors. Robot response pending.
+- Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors. The robot raises no errors.
     - This "issue" could be an advantage, as it is possible to lie to the machine about 3D printed or non-standard plates that have been designed to fit both the heater-shaker and the relevant adapter. This would skip having to create custom labware definitions.
 
 ## Obligatory mention of *datalab*
@@ -44,6 +44,7 @@ Miscellaneous:
 - 21.07.26: Capy performed initial testing.
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
 - 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate. Yield okay (44-60%).
+- 04.08.26: Capy performed method A variant synthesis with cobalt.
 
 # Appendix
 

@@ -38,6 +38,7 @@ Failure modes:
 - Crashes – should not be a problem due to initial testing, but always be ready to press stop
 - Pipette leakage – should have been seen in testing, immediate stop, back to testing to see if air gaps stop this
 - Problems with ethanol (if applicable) – stop, could try creating a custom liquid class for special instructions then go back to testing (with ethanol this time)
+
 In case of success: find a place for sample(s) to sit undisturbed
 
 # Results

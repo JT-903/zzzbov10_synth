@@ -36,6 +36,9 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
             return False, f"Sample {sid}: vol_anti must be 0-200 µL, got {vol_anti}"
         if cycle_n < 1 or not isinstance(cycle_n, int):
             return False, f"Sample {sid}: cycle number must be a positive integer, got {cycle_n}"
+        # Overflow clause - modify where necessary, currently not necessary
+        if vol_a + vol_b + vol_c + vol_anti > 800:
+            return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 800 µL)"
 
     return True, "All samples valid"
 
@@ -73,11 +76,11 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - custom labware doesn't fit on adapters yet
     hs_mod.close_labware_latch()
     ''' # no hs_mod
-    hs_plate = protocol.load_labware("sunlab_96_vialrack_800ul", "D3")
+    hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
     #'''
 
-    # Trash
-    trash = protocol.load_trash_bin("A3")
+    # Trash has moved
+    trash = protocol.load_trash_bin("D1")
 
     # Instrument
     protocol.comment("-> Initialising instrument")
@@ -193,8 +196,8 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Transferring 1,2,4-triazole")
     for i in range(sampleN):
         pipette.pick_up_tip(tips.wells()[1+sampleN+i])
-        pipette.aspirate(volC[i], reservoir.wells()[2])
-        pipette.dispense(volC[i], hs_plate.wells()[i], rate=3.0)
+        pipette.aspirate(volB[i], reservoir.wells()[2])
+        pipette.dispense(volB[i], hs_plate.wells()[i], rate=3.0)
         pipette.dynamic_mix(
             aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
             dispense_start_location=hs_plate.wells()[i].bottom(z=20),
