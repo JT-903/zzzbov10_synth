@@ -34,6 +34,10 @@ Miscellaneous:
 - Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors. The robot raises no errors.
     - This "issue" could be an advantage, as it is possible to lie to the machine about 3D printed or non-standard plates that have been designed to fit both the heater-shaker and the relevant adapter. This would skip having to create custom labware definitions.
 
+### The Current Direction
+
+At the end of the 04.08 synthesis run (method A variant), the program ended in a pressure error when trying to aspirate ethanol. This may be due to the pipette not quite dispensing/mixing correctly beforehand. As such, more testing is needed to see if the ethanol is the problem, or if something else in the protocol is going wrong. `initial_testing.py` has been rewritten to investigate this, and will be performed before the next synthesis run.
+
 ## Obligatory mention of *datalab*
 
 - *datalab* integration: ideally, the sample data could be generated in the *datalab* interface, and robot actions could be relayed back to *datalab*. The sample data would then be injected into the python script due to the JSON file problem above.
@@ -44,7 +48,7 @@ Miscellaneous:
 - 21.07.26: Capy performed initial testing.
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
 - 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate. Yield okay (44-60%).
-- 04.08.26: Capy performed method A variant synthesis with cobalt.
+- 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful.
 
 # Appendix
 

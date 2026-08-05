@@ -15,5 +15,12 @@ Failure mode:
 
 # Results
 
+An error occurred in sample 3 (200 ul) anti-solvent addition. No anti-solvent was added. I don't know why this happened. I'll test a large anti-solvent transfer before the next synthesis attempt (see initial_testing.py).
+
 Lessons learned:
-- h
+- Custom labware is terrible. Use an offset instead.
+- Some sample was getting left on the tips after dynamic mixing steps.
+- They're all going very blue after mixing well.
+    - The blue settled to the bottom of sample 2 very quickly - anti-solvent effect?
+
+Next run, I want to isolate the blue stuff. For that, I'll need a copy of sample 1 to quench immediately. Also, I now think the blue stuff is cobalt hydroxide.

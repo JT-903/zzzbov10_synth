@@ -4,9 +4,13 @@ import json
 
 # stealing clara's code but modifying it to fit my script
 EXAMPLE_DATA = json.loads("""[
-    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 0, "delay_time": 10, "cycle_n": 3},
-    {"sample_id": 2, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 100, "delay_time": 5, "cycle_n": 4},
-    {"sample_id": 3, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 200, "delay_time": 0, "cycle_n": 5}
+    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 400, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 7, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 500, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 0, "delay_time": 10, "cycle_n": 3}
 ]""") # the datalab integration may have to directly inject the json file into here
 
 def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
@@ -32,11 +36,9 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
             return False, f"Sample {sid}: vol_b must be 0-200 µL, got {vol_b}"
         if vol_c < 0 or vol_c > 200:
             return False, f"Sample {sid}: vol_c must be 0-200 µL, got {vol_c}"
-        if vol_anti < 0 or vol_anti > 200:
-            return False, f"Sample {sid}: vol_anti must be 0-200 µL, got {vol_anti}"
         if cycle_n < 1 or not isinstance(cycle_n, int):
             return False, f"Sample {sid}: cycle number must be a positive integer, got {cycle_n}"
-        # Overflow clause - modify where necessary, currently not necessary
+        # Overflow clause - modify where necessary
         if vol_a + vol_b + vol_c + vol_anti > 800:
             return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 800 µL)"
 
@@ -58,7 +60,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "v0.6c: swapped trz and SCN additions, removed timeDelay, implemented cycleN, ready for synthesis, 31/07/26",
+    "description": "v0.7a: removed anti-solvent limit, added blow-outs 05/08/26",
     "author": "JT-903"
 }
 
@@ -77,6 +79,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod.close_labware_latch()
     ''' # no hs_mod
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
+    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
     #'''
 
     # Trash has moved
@@ -129,7 +132,7 @@ def run(protocol: protocol_api.ProtocolContext):
     )
     reservoir.load_liquid(
         wells = ["A7"],
-        volume = 2500,
+        volume = 5000,
         liquid = anti_solvent_gen
     )
 
@@ -190,6 +193,7 @@ def run(protocol: protocol_api.ProtocolContext):
             volume=200,
             rate=3.0
         )
+        pipette.blow_out(hs_plate.wells()[i])
         pipette.drop_tip()
 
     # Add (trz) to wells rapidly
@@ -205,11 +209,13 @@ def run(protocol: protocol_api.ProtocolContext):
             volume=200,
             rate=3.0
         ) # this could cause precipitation of product at higher concentrations - modify for big crystal
+        pipette.blow_out(hs_plate.wells()[i])
         pipette.drop_tip()
 
     # Add anti-solvent to wells
     protocol.comment("-> Transferring anti-solvent")
     k = 0
+    pipette.well_bottom_clearance.dispense = 30 # don't contaminate the reservoir
     for i in range(sampleN):
         if volAnti[i] == 0:
             k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
@@ -223,6 +229,7 @@ def run(protocol: protocol_api.ProtocolContext):
                 volume=200,
                 rate=3.0
             ) # this could cause precipitation of product - modify for big crystal
+            pipette.blow_out(hs_plate.wells()[i])
             pipette.drop_tip()
 
     # Finalising
