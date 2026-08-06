@@ -11,11 +11,11 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 - Heater-shaker module: the shake mode can be used to mix the triazole into the cobalt solution. Alternatively, the hardcode can be edited to disable it.
     - This has limited effectiveness on tall narrow wells, and should work better on wide wells.
 - Antisolvent is supported, and a volume of it is required (or set it to zero and it will be skipped).
-- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 27/07/26, the protocol for Mara is a few versions behind.
+- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 06/08/26, the protocol for Mara is quite a few versions behind.
 - Image capture: after any Flex method is run, the robot can capture an image every hour for 48 hours. Currently disabled.
 - The method A script should be used for Mn, Fe, Co, Ni, and Zn; the method B script should be used only for Cu and Zn.
     - In order to yield the beta-Ni phase, the starting solutions should be made up in nitric acid.
-- Variant script: in `methodA_variant.py`, the thiocyanate is added before the triazole. FIHM group data shows this should work.
+- Variant script: in `methodA_variant.py`, the thiocyanate is added before the triazole. This works well and doesn't require the heater-shaker, so is preferred over method A.
 
 ## Notes and Observations
 
@@ -33,10 +33,13 @@ Miscellaneous:
 - Flow rates in multi-channel pipettes are much slower than single-channel pipettes of the same volume.
 - Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors. The robot raises no errors.
     - This "issue" could be an advantage, as it is possible to lie to the machine about 3D printed or non-standard plates that have been designed to fit both the heater-shaker and the relevant adapter. This would skip having to create custom labware definitions.
+- Issue: the pipette will throw out a "pipette overpressure error" during some `transfer_with_liquid_class` commands but not with others. To work around this, don't use `transfer_with_liquid_class` because the normal `transfer` works perfectly fine with ethanol.
 
 ### The Current Direction
 
-At the end of the 04.08 synthesis run (method A variant), the program ended in a pressure error when trying to aspirate ethanol. This may be due to the pipette not quite dispensing/mixing correctly beforehand. As such, more testing is needed to see if the ethanol is the problem, or if something else in the protocol is going wrong. `initial_testing.py` has been rewritten to investigate this, and will be performed before the next synthesis run.
+The SunLab Vial Rack can actually hold up to 1 mL (but maybe don't fill all the way to the top). The vial rack should be modified to 900 uL.
+
+Do some interesting science!
 
 ## Obligatory mention of *datalab*
 
@@ -49,7 +52,7 @@ At the end of the 04.08 synthesis run (method A variant), the program ended in a
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
 - 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate. Yield okay (44-60%).
 - 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful.
-- 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed.
+- 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended.
 
 # Appendix
 

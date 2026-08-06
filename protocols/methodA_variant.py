@@ -4,13 +4,12 @@ import json
 
 # stealing clara's code but modifying it to fit my script
 EXAMPLE_DATA = json.loads("""[
-    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 400, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 7, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 500, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "vol_c": 200, "vol_anti": 0, "delay_time": 10, "cycle_n": 3}
+    {"sample_id": 1, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 400, "delay_time": 0, "cycle_n": 2},
+    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 500, "delay_time": 0, "cycle_n": 2}
 ]""") # the datalab integration may have to directly inject the json file into here
 
 def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
@@ -39,8 +38,8 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
         if cycle_n < 1 or not isinstance(cycle_n, int):
             return False, f"Sample {sid}: cycle number must be a positive integer, got {cycle_n}"
         # Overflow clause - modify where necessary
-        if vol_a + vol_b + vol_c + vol_anti > 800:
-            return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 800 µL)"
+        if vol_a + vol_b + vol_c + vol_anti > 900:
+            return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 900 µL)"
 
     return True, "All samples valid"
 
@@ -60,7 +59,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "v0.7a: removed anti-solvent limit, added blow-outs 05/08/26",
+    "description": "v0.7b: removed anti-solvent limit, added blow-outs, also water option, 05/08/26",
     "author": "JT-903"
 }
 
@@ -114,6 +113,11 @@ def run(protocol: protocol_api.ProtocolContext):
         description = "probably neat ethanol",
         display_color = "#FFFFFF"
     )
+    water_liquid = protocol.define_liquid(
+        name = "Water",
+        description = "water",
+        display_color = "#0000FF"
+    )
 
     reservoir.load_liquid(
         wells = ["A1"],
@@ -134,6 +138,11 @@ def run(protocol: protocol_api.ProtocolContext):
         wells = ["A7"],
         volume = 5000,
         liquid = anti_solvent_gen
+    )
+    reservoir.load_liquid(
+        wells = ["A9"],
+        volume = 5000,
+        liquid = water_liquid
     )
 
     # Task file integration
@@ -163,7 +172,6 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # -|===> MAIN <===|-
     protocol.home()
-    antiClass = protocol.get_liquid_class("ethanol_80") # used for anti-solvent transfer - volatile
     sampleN = len(samples) # used for looping and indexing later
     protocol.comment("-|===> Starting Protocol <===|-")
     ''' Notes for users:
@@ -180,17 +188,39 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette.transfer(volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
     pipette.drop_tip()
 
+    # Add anti-solvent to wells
+    protocol.comment("-> Transferring anti-solvent")
+    k = 0
+    pipette.well_bottom_clearance.dispense = 28 # don't contaminate the reservoir
+    for i in range(sampleN):
+        if volAnti[i] == 0:
+            k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
+        else:
+            pipette.pick_up_tip(tips.wells()[1+i-k])
+            #pipette.home() # just in case the overpressure error somehow persists
+            pipette.transfer(volAnti[i], reservoir.wells()[8], hs_plate.wells()[i], new_tip="never")
+            pipette.dynamic_mix(
+                aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
+                dispense_start_location=hs_plate.wells()[i].bottom(z=20),
+                repetitions=cycleN[i],
+                volume=150,
+                rate=3.0
+            ) # this could cause precipitation of product - modify for big crystal
+            pipette.blow_out()
+            pipette.drop_tip()
+
     # Add ammonium thiocyanate to wells
     protocol.comment("-> Transferring ammonium thiocyanate")
+    pipette.well_bottom_clearance.dispense = 1 # back to default
     for i in range(sampleN):
-        pipette.pick_up_tip(tips.wells()[1+i])
+        pipette.pick_up_tip(tips.wells()[1+sampleN+i-k])
         pipette.aspirate(volC[i], reservoir.wells()[4])
         pipette.dispense(volC[i], hs_plate.wells()[i])
         pipette.dynamic_mix(
             aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
             dispense_start_location=hs_plate.wells()[i].bottom(z=20),
             repetitions=cycleN[i],
-            volume=150,
+            volume=200,
             rate=3.0
         )
         pipette.blow_out(hs_plate.wells()[i])
@@ -199,7 +229,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # Add (trz) to wells rapidly
     protocol.comment("-> Transferring 1,2,4-triazole")
     for i in range(sampleN):
-        pipette.pick_up_tip(tips.wells()[1+sampleN+i])
+        pipette.pick_up_tip(tips.wells()[1+2*sampleN+i-k])
         pipette.aspirate(volB[i], reservoir.wells()[2])
         pipette.dispense(volB[i], hs_plate.wells()[i], rate=3.0)
         pipette.dynamic_mix(
@@ -208,29 +238,9 @@ def run(protocol: protocol_api.ProtocolContext):
             repetitions=cycleN[i],
             volume=200,
             rate=3.0
-        ) # this could cause precipitation of product at higher concentrations - modify for big crystal
-        pipette.blow_out(hs_plate.wells()[i])
+        ) # this causes precipitation of blue - modify for big crystal
+        pipette.blow_out()
         pipette.drop_tip()
-
-    # Add anti-solvent to wells
-    protocol.comment("-> Transferring anti-solvent")
-    k = 0
-    pipette.well_bottom_clearance.dispense = 30 # don't contaminate the reservoir
-    for i in range(sampleN):
-        if volAnti[i] == 0:
-            k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
-        else:
-            pipette.pick_up_tip(tips.wells()[1+2*sampleN+i-k])
-            pipette.transfer_with_liquid_class(antiClass, volAnti[i], reservoir.wells()[6], hs_plate.wells()[i], new_tip="never")
-            pipette.dynamic_mix(
-                aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
-                dispense_start_location=hs_plate.wells()[i].bottom(z=20),
-                repetitions=cycleN[i],
-                volume=200,
-                rate=3.0
-            ) # this could cause precipitation of product - modify for big crystal
-            pipette.blow_out(hs_plate.wells()[i])
-            pipette.drop_tip()
 
     # Finalising
     pipette.home()

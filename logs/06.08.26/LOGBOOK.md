@@ -25,11 +25,11 @@ Failure modes:
 
 # Results
 
-No errors on the initial testing. Wellplate aligned well.
+No errors on the initial testing for some reason. Vial rack aligned quite well, but drifts slightly forward as it moves through the column due to the spacing between wells being different.
 
-The pipette overpressure error is persistent while `transfer_with_liquid_class` is used. Not using it prevents this error.
+The pipette overpressure error happened multiple times during the variant synthesis while transferring large volumes of ethanol, and is persistent while `transfer_with_liquid_class` is used. Using `transfer` instead prevents this error.
 
-The blue precipitate is cobalt hydroxide. See `gotcha.jpg` for proof.
+The blue precipitate is almost definitely cobalt hydroxide. See `gotcha.jpg` for proof. Sample 1 will be sent for PXRD at a later date, unless it turns pink.
 
 Lessons learned:
 - `transfer_with_liquid_class` is terrible and just throws up random errors.

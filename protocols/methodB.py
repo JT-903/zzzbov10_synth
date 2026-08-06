@@ -4,9 +4,9 @@ import json
 
 # stealing clara's code but modifying it to fit my script
 EXAMPLE_DATA = json.loads("""[
-    {"sample_id": 1, "vol_a": 200, "vol_b": 200, "delay_time": 60},
-    {"sample_id": 2, "vol_a": 200, "vol_b": 200, "delay_time": 120},
-    {"sample_id": 3, "vol_a": 200, "vol_b": 200, "delay_time": 180}
+    {"sample_id": 1, "vol_a": 200, "vol_b": 80, "delay_time": 60},
+    {"sample_id": 2, "vol_a": 200, "vol_b": 80, "delay_time": 120},
+    {"sample_id": 3, "vol_a": 200, "vol_b": 80, "delay_time": 180}
 ]""") # vol_a, vol_b, delay_time are the only values used as the protocol is very simple
 
 def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
@@ -30,6 +30,9 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
             return False, f"Sample {sid}: vol_b must be 0-200 µL, got {vol_b}"
         if delay_time < 0 or delay_time > 600:
             return False, f"Sample {sid}: mixing time must be 0-600 s, got {delay_time}"
+        # Overflow clause - modify where necessary
+        if vol_a + vol_b + vol_c + vol_anti > 900:
+            return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 900 µL)"
 
     return True, "All samples valid"
 
@@ -47,7 +50,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float]]:
 # This isn't necessary
 metadata = {
     "protocolName": "Cu/Zn analogue AutoSynthesis",
-    "description": "v0.5e: completely separate from method A, camera integration, ready for synthesis, 30/07/26",
+    "description": "v0.6a: removed volatile liquid class,  06/08/26",
     "author": "JT-903"
 }
 
@@ -63,9 +66,11 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - custom labware doesn't fit on adapters yet
+    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
-    hs_plate = protocol.load_labware("sunlab_96_vialrack_800ul", "D3")
+    hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
+    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
     #'''
 
     # Trash
@@ -127,22 +132,21 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # -|===> MAIN <===|-
     protocol.home()
-    antiClass = protocol.get_liquid_class("ethanol_80") # used for both solvent transfers - volatile
     protocol.comment("-|===> Starting Protocol <===|-")
     
     # Add metal thiocyanate to wells
     protocol.comment("-> Transferring metal thiocyanate")
-    #pipette.well_bottom_clearance.aspirate = 0.5 # if there is trouble with residual liquid in the reservoir
+    #pipette.well_bottom_clearance.aspirate = 2 # labware difference
     pipette.pick_up_tip(tips.wells()[0])
     for i in range(len(samples)):
-        pipette.transfer_with_liquid_class(antiClass, volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
+        pipette.transfer(volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
     pipette.drop_tip()
 
     # Add (trz) to wells
     protocol.comment("-> Transferring 1,2,4-triazole")
     for i in range(len(samples)):
         pipette.pick_up_tip(tips.wells()[1+i])
-        pipette.transfer_with_liquid_class(antiClass, volB[i], reservoir.wells()[2], hs_plate.wells()[i], new_tip="never")
+        pipette.transfer(volB[i], reservoir.wells()[2], hs_plate.wells()[i], new_tip="never")
         pipette.drop_tip()
 
     # Stirring and concentrating

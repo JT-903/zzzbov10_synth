@@ -39,6 +39,9 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
             return False, f"Sample {sid}: mixing time must be 0-60 s, got {delay_time}"
         if cycle_n < 1 or not isinstance(cycle_n, int):
             return False, f"Sample {sid}: number of mixing cycles must be a positive integer, got {cycle_n}"
+        # Overflow clause - modify where necessary
+        if vol_a + vol_b + vol_c + vol_anti > 900:
+            return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 900 µL)"
 
     return True, "All samples valid"
 
@@ -59,7 +62,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 AutoSynthesis",
-    "description": "v0.6b: camera integration, more lessons learned, ready for synthesis, 30/07/26",
+    "description": "v0.7a: removed volatile liquid class, 06/08/26",
     "author": "JT-903"
 }
 
@@ -75,6 +78,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - custom labware doesn't fit on adapters yet
+    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
     hs_plate = protocol.load_labware("sunlab_96_vialrack_800ul", "D3")
@@ -162,7 +166,6 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # -|===> MAIN <===|-
     protocol.home()
-    antiClass = protocol.get_liquid_class("ethanol_80") # used for anti-solvent transfer - volatile
     sampleN = len(samples) # used for looping and indexing later
     protocol.comment("-|===> Starting Protocol <===|-")
     ''' Notes for users:
@@ -181,7 +184,7 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Add (trz) to wells slowly with mixing
     protocol.comment("-> Transferring 1,2,4-triazole slowly with mixing")
-    pipette.well_bottom_clearance.dispense = 30 # KNOWN HARDWARE ISSUE - should go away with custom labware definition
+    pipette.well_bottom_clearance.dispense = 28 # KNOWN HARDWARE ISSUE
     dist_list = [elem/cycleN[0] for elem in volB]
 
     pipette.pick_up_tip(tips.wells()[1])
@@ -207,17 +210,19 @@ def run(protocol: protocol_api.ProtocolContext):
             volume=200,
             rate=3.0
         ) # this could cause precipitation of product at higher concentrations - modify for big crystal
+        pipette.blow_out()
         pipette.drop_tip()
 
     # Add anti-solvent to wells
     protocol.comment("-> Transferring anti-solvent")
+    pipette.well_bottom_clearance.dispense = 28 # no contamination
     k = 0
     for i in range(sampleN):
         if volAnti[i] == 0:
             k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
         else:
             pipette.pick_up_tip(tips.wells()[2+sampleN+i-k])
-            pipette.transfer_with_liquid_class(antiClass, volAnti[i], reservoir.wells()[6], hs_plate.wells()[i], new_tip="never")
+            pipette.transfer(volAnti[i], reservoir.wells()[6], hs_plate.wells()[i], new_tip="never")
             pipette.dynamic_mix(
                 aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
                 dispense_start_location=hs_plate.wells()[i].bottom(z=20),
@@ -225,6 +230,7 @@ def run(protocol: protocol_api.ProtocolContext):
                 volume=200,
                 rate=3.0
             ) # this could cause precipitation of product - modify for big crystal
+            pipette.blow_out()
             pipette.drop_tip()
 
     # Finalising
