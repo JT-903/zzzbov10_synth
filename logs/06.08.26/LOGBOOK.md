@@ -25,4 +25,11 @@ Failure modes:
 
 # Results
 
+No errors on the initial testing. Wellplate aligned well.
+
+The pipette overpressure error is persistent while `transfer_with_liquid_class` is used. Not using it prevents this error.
+
+The blue precipitate is cobalt hydroxide. See `gotcha.jpg` for proof.
+
 Lessons learned:
+- `transfer_with_liquid_class` is terrible and just throws up random errors.

@@ -190,7 +190,7 @@ def run(protocol: protocol_api.ProtocolContext):
             aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
             dispense_start_location=hs_plate.wells()[i].bottom(z=20),
             repetitions=cycleN[i],
-            volume=200,
+            volume=150,
             rate=3.0
         )
         pipette.blow_out(hs_plate.wells()[i])

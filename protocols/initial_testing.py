@@ -45,6 +45,10 @@ def run(protocol: protocol_api.ProtocolContext):
     pipette.transfer_with_liquid_class(antiClass, 300, reservoir.wells()[6], reservoir.wells()[11], new_tip="never")
     pipette.transfer_with_liquid_class(antiClass, 200, reservoir.wells()[6], reservoir.wells()[11], new_tip="never")
     pipette.transfer_with_liquid_class(antiClass, 500, reservoir.wells()[6], reservoir.wells()[11], new_tip="never")
+    pipette.move_to(hs_plate.wells()[0].bottom(z=2))
+    pipette.home()
+    pipette.move_to(hs_plate.wells()[12].bottom(z=28))
+    pipette.home()
     pipette.drop_tip()
 
     # Finalising
