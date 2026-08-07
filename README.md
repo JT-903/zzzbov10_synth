@@ -4,26 +4,27 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 
 ## Features
 
-- JSON file integration: store up to 47/95 (methods A/B respectively) sets of sample parameters (volumes, mixing times) in `sampledata.json` and they will be carried out concurrently.
-    - Unfortunately, this won't simply work on the robot, as the JSON file cannot be uploaded to it. [The API documentation implies this is possible, and files (CSV in their example) can be stored on the robot: https://docs.opentrons.com/python-api/runtime-parameters/defining/]
-    - A possible workaround to this is to use the Jupyter notebook server running on the robot at port 48888. Note that all files in the notebook are stored on the robot, so there could still be a struggle there.
-    - Due to implementation, only the first mixing time and cycle number will be used. However, these quantities must be present for all samples (they can be set to 0 and 1 respectively if desired).
-- Heater-shaker module: the shake mode can be used to mix the triazole into the cobalt solution. Alternatively, the hardcode can be edited to disable it.
-    - This has limited effectiveness on tall narrow wells, and should work better on wide wells.
-- Antisolvent is supported, and a volume of it is required (or set it to zero and it will be skipped).
-- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified slightly for Mara (instructions in the file). As of 06/08/26, the protocol for Mara is quite a few versions behind.
-- Image capture: after any Flex method is run, the robot can capture an image every hour for 48 hours. Currently disabled.
-- The method A script should be used for Mn, Fe, Co, Ni, and Zn; the method B script should be used only for Cu and Zn.
-    - In order to yield the beta-Ni phase, the starting solutions should be made up in nitric acid.
+- JSON file integration: store sets of sample parameters (volumes, mixing times) and they will be carried out concurrently.
+- Antisolvent, dilution, and acidification are supported, and volumes of them are required (or set it to zero and it will be skipped).
 - Variant script: in `methodA_variant.py`, the thiocyanate is added before the triazole. This works well and doesn't require the heater-shaker, so is preferred over method A.
+- The method A scripts should be used for Mn, Fe, Co, Ni, and Zn; the method B script should be used only for Cu and Zn.
+    - In order to yield the beta-Ni phase, the starting solutions should be made up in nitric acid.
+
+## Retired features
+
+- `methodA.py`, `meatball_Maranara.py`, the custom labware definition, and separate sample data JSON files have been retired as they are no longer necessary.
+- Heater-shaker module (method A): the shake mode can be used to mix the triazole into the cobalt solution. Alternatively, the hardcode can be edited to disable it.
+    - This has limited effectiveness on tall narrow wells, and should work better on wide wells.
+- Mara: The alternative script to `methodA.py` for Mara is `meatball_Maranara.py`, and `initial_testing.py` should be modified for Mara. As of 06/08/26, the protocol for Mara is quite a few versions behind method A.
+- Image capture: after any Flex method is run, the robot can capture an image every hour for 48 hours. Currently disabled.
 
 ## Notes and Observations
 
 Modularity:
 - When switching pipettes, any command with a `flow_rate` parameter also had to be edited. As such, all of these have been replaced with the `rate` parameter for easier switching of pipettes.
 - Issue: Labware and adapters need to be compatible when the heater-shaker is being used, or a LabwareCannotBeStackedError is raised. To not receive this error, see the appendix for known matches or create a custom labware definition (or lie to the robot).
-- Warning: JSON files made for method A are not compatible with method B, as the `delay_time` parameter is used very differently, and vice versa.
-    - Method A JSON files are compatible with the variant method, but the variant method has a maximum sample number of 31.
+- `methodA_variant.py` can be modified to work with additional tip racks to increase sample numbers, but the tip tracking must be rewritten.
+- `methodB.py` has not been made fully modular as it has not been tested yet.
 
 AI Compatibility:
 - Issue: When using a multi-channel pipette in SINGLE nozzle configuration, `pick_up_tip` locations must be specified or the pipette will raise an OutOfTipsError. This does not affect the prewritten scripts in `protocols` as tip tracking is hardcoded in, but if the AI were to write its own script it should be prompted to specify tip locations.
@@ -68,7 +69,7 @@ Without custom labware definitions:
 
 Most of this information is not present on the labware library or the API documentation. A small amount is present as retired/deprecated "combination" labware.
 
-These lists were collected using the `adapter_compatibility_tester.py` script. Each adapter should be checked after every API release. More information about running this script can be found in the script.
+These lists were collected by simulating the `adapter_compatibility_tester.py` script. Each adapter should be checked after every API release. More information about running this script can be found in the script.
 
 ##### opentrons_universal_flat_adapter
 - axygen_96_wellplate_500ul

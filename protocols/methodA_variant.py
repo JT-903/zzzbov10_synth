@@ -2,64 +2,96 @@ from opentrons import protocol_api
 from opentrons.protocol_api import SINGLE, ROW, COLUMN, ALL
 import json
 
-# stealing clara's code but modifying it to fit my script
-EXAMPLE_DATA = json.loads("""[
-    {"sample_id": 1, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 400, "delay_time": 0, "cycle_n": 2},
-    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 500, "delay_time": 0, "cycle_n": 2}
-]""") # the datalab integration may have to directly inject the json file into here
+# The order in which things are added
+# 1 vol_a; 2 vol_b; 3 vol_c; 4 vol_anti; 5 dil_vol; 6 vol_ha
+ordering = [1, 5, 6, 3, 2, 4] # [1, 5, 6, 3, 2, 4] is recommended; 6 first is a bad idea
+# the datalab integration could inject the ordering into here
 
-def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
+# thanks for the code clara but it's pretty unrecognisable now
+EXAMPLE_DATA = json.loads("""[
+    {"sample_id": 1, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 0, "vol_ha": 0, "cycle_n": 2},
+    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 100, "vol_ha": 100, "cycle_n": 2}
+]""") # the datalab integration could inject the json file into here
+
+def validate_sample_parameters(samples) -> tuple[bool, str]:
     """Validate sample parameters (dict-based version)."""
-    max_samples = 31
+    max_samples = 95 # 96 per tip rack, minus 1 for first substance transfer
 
     if not samples:
         return False, "No samples provided"
-    if len(samples) > max_samples:
-        return False, f"Too many samples for this protocol: {len(samples)} (max {max_samples})"
 
     for sample in samples:
         vol_a = sample["vol_a"]
         vol_b = sample["vol_b"]
         vol_c = sample["vol_c"]
         vol_anti = sample["vol_anti"]
+        dil_vol = sample["dil_vol"]
+        vol_ha = sample["vol_ha"]
         cycle_n = sample["cycle_n"]
         sid = sample["sample_id"]
 
-        if vol_a < 0 or vol_a > 200:
-            return False, f"Sample {sid}: vol_a must be 0-200 µL, got {vol_a}"
-        if vol_b < 0 or vol_b > 200:
-            return False, f"Sample {sid}: vol_b must be 0-200 µL, got {vol_b}"
-        if vol_c < 0 or vol_c > 200:
-            return False, f"Sample {sid}: vol_c must be 0-200 µL, got {vol_c}"
+        # Big check
+        if vol_a < 0:
+            return False, f"Sample {sid}: vol_a must be non-negative, got {vol_a}"
+        if vol_b < 0:
+            return False, f"Sample {sid}: vol_b must be non-negative, got {vol_b}"
+        if vol_c < 0:
+            return False, f"Sample {sid}: vol_c must be non-negative, got {vol_c}"
+        if vol_anti < 0:
+            return False, f"Sample {sid}: vol_anti must be non-negative, got {vol_anti}"
+        if dil_vol < 0:
+            return False, f"Sample {sid}: dil_vol must be non-negative, got {dil_vol}"
+        if vol_ha < 0:
+            return False, f"Sample {sid}: vol_ha must be non-negative, got {vol_ha}"
         if cycle_n < 1 or not isinstance(cycle_n, int):
             return False, f"Sample {sid}: cycle number must be a positive integer, got {cycle_n}"
-        # Overflow clause - modify where necessary
-        if vol_a + vol_b + vol_c + vol_anti > 900:
-            return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 900 µL)"
+        
+        # Max sample checking - implicit assumption that vol_a is added first
+        if vol_b != 0:
+            max_samples = max_samples - 1
+        if vol_c != 0:
+            max_samples = max_samples - 1
+        if vol_anti != 0:
+            max_samples = max_samples - 1
+        if dil_vol != 0:
+            max_samples = max_samples - 1
+        if vol_ha != 0:
+            max_samples = max_samples - 1
+        
+        # Overflow clause
+        total_vol = vol_a + vol_b + vol_c + vol_anti + dil_vol + vol_ha
+        if total_vol > 900:
+            return False, f"Sample {sid}: total volume exceeds well volume: {total_vol} µL (max 900 µL)"
+        
+    if max_samples < 0:
+        return False, f"Too many samples for this protocol: {-max_samples} liquid transfers over maximum"
 
     return True, "All samples valid"
 
-def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], list[float], list[float]]:
-    """Convert dict-based sample parameters to lists."""
+def samples_to_lists(samples):
+    """Convert dict-based sample parameters to a list of lists."""
 
     vol_a_list = [s["vol_a"] for s in samples]
     vol_b_list = [s["vol_b"] for s in samples]
     vol_c_list = [s["vol_c"] for s in samples]
     vol_anti_list = [s["vol_anti"] for s in samples]
+    dil_vol_list = [s["dil_vol"] for s in samples]
+    vol_ha_list = [s["vol_ha"] for s in samples]
     cycle_n_list = [s["cycle_n"] for s in samples]
 
-    return vol_a_list, vol_b_list, vol_c_list, vol_anti_list, cycle_n_list
+    return [vol_a_list, vol_b_list, vol_c_list, vol_anti_list, dil_vol_list, vol_ha_list, cycle_n_list]
 
 # Back to my code
+
+def orderingToName(n):
+    names = ["metal nitrate", "1,2,4-triazole", "ammonium thiocyanate", "anti-solvent", "water", "nitric acid"]
+    return names[n-1]
 
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "v0.7b: also nitric acid option, about to break everything, 07/08/26",
+    "description": "vBeta: total modularity, hopefully I haven't broken everything, 07/08/26",
     "author": "JT-903"
 }
 
@@ -78,7 +110,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod.close_labware_latch()
     ''' # no hs_mod
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
-    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_800ul
     #'''
 
     # Trash has moved
@@ -158,9 +190,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # Task file integration
     protocol.comment("-> Loading sample parameters")
     try:
-        samples = EXAMPLE_DATA # the hashed-out code below is probably not useful
-        #with open("sampledataA.json", "r") as f:
-            #samples = json.load(f)
+        samples = EXAMPLE_DATA
         is_valid, msg = validate_sample_parameters(samples)
         if not is_valid:
             raise ValueError(msg)
@@ -170,87 +200,62 @@ def run(protocol: protocol_api.ProtocolContext):
         raise
     
     #''' Data from the file
-    volA, volB, volC, volAnti, cycleN = samples_to_lists(samples)
+    theMasterList = samples_to_lists(samples)
     ''' # Default data instead of the file
     samples = ["lol"]
-    volA = [200]
-    volB = [200]
-    volC = [200]
-    volAnti = [0]
-    cycleN = [4]
+    theMasterList = [[100], [100], [100], [0], [0], [100], [2]]
     #'''
+
+    # The Modularity Functions - the reason I rewrote everything
+    def firstThingsFirst(n):
+        resIndex = 2*n - 2
+        protocol.comment(f"-> Transferring {orderingToName(n)}")
+        pipette.pick_up_tip(tips.wells()[0])
+        for i in range(sampleN):
+            pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[i], new_tip="never")
+        pipette.drop_tip()
+    
+    def addSubstance(n, m, K):
+        resIndex = 2*n - 2
+        protocol.comment(f"-> Transferring {orderingToName(n)}")
+        for i in range(sampleN):
+            if theMasterList[n-1][i] == 0:
+                K += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
+            else:
+                pipette.pick_up_tip(tips.wells()[1+m*sampleN+i-K])
+                #pipette.home() # just in case the overpressure error somehow persists
+                pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[i], new_tip="never")
+                pipette.dynamic_mix(
+                    aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
+                    dispense_start_location=hs_plate.wells()[i].bottom(z=20),
+                    repetitions=theMasterList[6][i],
+                    volume=150,
+                    rate=3.0
+                ) # this could cause precipitation of product - modify for big crystal
+                pipette.blow_out()
+                pipette.drop_tip()
+        return K
 
     # -|===> MAIN <===|-
     protocol.home()
     sampleN = len(samples) # used for looping and indexing later
+    pipette.well_bottom_clearance.aspirate = 2 # labware difference
+    k = 0
     protocol.comment("-|===> Starting Protocol <===|-")
+
     ''' Notes for users:
-    1) k is the tip tracking index; i is the sample index (which is also used for tip tracking).
+    1) k/K is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the looping index.
         - Please do not try to redefine them. I don't know how spectacularly the rest of the program will break.
     2) There is no built-in concentrating step for the Mn and Zn analogues. This must be done separately.
     '''
     
-    # Add metal nitrate to wells
-    protocol.comment("-> Transferring metal nitrate")
-    pipette.well_bottom_clearance.aspirate = 2 # labware difference
-    pipette.pick_up_tip(tips.wells()[0])
-    for i in range(sampleN):
-        pipette.transfer(volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
-    pipette.drop_tip()
+    # Full modularity is so cool
+    firstThingsFirst(ordering.pop(0))
 
-    # Add anti-solvent to wells
-    protocol.comment("-> Transferring anti-solvent")
-    k = 0
-    pipette.well_bottom_clearance.dispense = 28 # don't contaminate the reservoir
-    for i in range(sampleN):
-        if volAnti[i] == 0:
-            k += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
-        else:
-            pipette.pick_up_tip(tips.wells()[1+i-k])
-            #pipette.home() # just in case the overpressure error somehow persists
-            pipette.transfer(volAnti[i], reservoir.wells()[8], hs_plate.wells()[i], new_tip="never")
-            pipette.dynamic_mix(
-                aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
-                dispense_start_location=hs_plate.wells()[i].bottom(z=20),
-                repetitions=cycleN[i],
-                volume=150,
-                rate=3.0
-            ) # this could cause precipitation of product - modify for big crystal
-            pipette.blow_out()
-            pipette.drop_tip()
+    pipette.well_bottom_clearance.dispense = 28 # don't contaminate the reservoirs
 
-    # Add ammonium thiocyanate to wells
-    protocol.comment("-> Transferring ammonium thiocyanate")
-    pipette.well_bottom_clearance.dispense = 1 # back to default
-    for i in range(sampleN):
-        pipette.pick_up_tip(tips.wells()[1+sampleN+i-k])
-        pipette.aspirate(volC[i], reservoir.wells()[4])
-        pipette.dispense(volC[i], hs_plate.wells()[i])
-        pipette.dynamic_mix(
-            aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
-            dispense_start_location=hs_plate.wells()[i].bottom(z=20),
-            repetitions=cycleN[i],
-            volume=200,
-            rate=3.0
-        )
-        pipette.blow_out(hs_plate.wells()[i])
-        pipette.drop_tip()
-
-    # Add (trz) to wells rapidly
-    protocol.comment("-> Transferring 1,2,4-triazole")
-    for i in range(sampleN):
-        pipette.pick_up_tip(tips.wells()[1+2*sampleN+i-k])
-        pipette.aspirate(volB[i], reservoir.wells()[2])
-        pipette.dispense(volB[i], hs_plate.wells()[i], rate=3.0)
-        pipette.dynamic_mix(
-            aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
-            dispense_start_location=hs_plate.wells()[i].bottom(z=20),
-            repetitions=cycleN[i],
-            volume=200,
-            rate=3.0
-        ) # this causes precipitation of blue - modify for big crystal
-        pipette.blow_out()
-        pipette.drop_tip()
+    for j in range(len(ordering)):
+        k = addSubstance(ordering[j], j, k)
 
     # Finalising
     pipette.home()

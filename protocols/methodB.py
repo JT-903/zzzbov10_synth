@@ -24,10 +24,10 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
         delay_time = sample["delay_time"]
         sid = sample["sample_id"]
 
-        if vol_a < 0 or vol_a > 200:
-            return False, f"Sample {sid}: vol_a must be 0-200 µL, got {vol_a}"
-        if vol_b < 0 or vol_b > 200:
-            return False, f"Sample {sid}: vol_b must be 0-200 µL, got {vol_b}"
+        if vol_a < 0:
+            return False, f"Sample {sid}: vol_a must be non-negative, got {vol_a}"
+        if vol_b < 0:
+            return False, f"Sample {sid}: vol_b must be non-negative, got {vol_b}"
         if delay_time < 0 or delay_time > 600:
             return False, f"Sample {sid}: mixing time must be 0-600 s, got {delay_time}"
         # Overflow clause - modify where necessary
@@ -49,8 +49,8 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float]]:
 
 # This isn't necessary
 metadata = {
-    "protocolName": "Cu/Zn analogue AutoSynthesis",
-    "description": "v0.6a: removed volatile liquid class,  06/08/26",
+    "protocolName": "Cu/Zn Analogue Synthesis",
+    "description": "v0.6b: rejigged ordering for mixing and concentrating, modernised, 07/08/26",
     "author": "JT-903"
 }
 
@@ -66,11 +66,11 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - custom labware doesn't fit on adapters yet
-    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_800ul
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
-    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_800ul
     #'''
 
     # Trash
@@ -127,22 +127,23 @@ def run(protocol: protocol_api.ProtocolContext):
     samples = ["lol"]
     volA = [200]
     volB = [200]
-    timeDelay = [10]
+    timeDelay = [60]
     #'''
 
     # -|===> MAIN <===|-
     protocol.home()
+    pipette.well_bottom_clearance.aspirate = 2 # labware difference
     protocol.comment("-|===> Starting Protocol <===|-")
     
     # Add metal thiocyanate to wells
     protocol.comment("-> Transferring metal thiocyanate")
-    #pipette.well_bottom_clearance.aspirate = 2 # labware difference
     pipette.pick_up_tip(tips.wells()[0])
     for i in range(len(samples)):
         pipette.transfer(volA[i], reservoir.wells()[0], hs_plate.wells()[i], new_tip="never")
     pipette.drop_tip()
 
     # Add (trz) to wells
+    pipette.well_bottom_clearance.dispense = 28 # don't contaminate the reservoir
     protocol.comment("-> Transferring 1,2,4-triazole")
     for i in range(len(samples)):
         pipette.pick_up_tip(tips.wells()[1+i])
@@ -151,9 +152,8 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Stirring and concentrating
     protocol.comment("-> Mixing and concentrating")
-    concTask = hs_mod.set_target_temperature(55) # DO NOT GO ABOVE 56
     hs_mod.set_and_wait_for_shake_speed(1200)
-    protocol.wait_for_tasks([concTask])
+    hs_mod.set_and_wait_for_target_temperature(55) # DO NOT GO ABOVE 56
     protocol.delay(seconds=timeDelay[0])
     hs_mod.deactivate_heater()
     hs_mod.deactivate_shaker()
