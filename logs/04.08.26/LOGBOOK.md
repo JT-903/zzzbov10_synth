@@ -24,3 +24,10 @@ Lessons learned:
     - The blue settled to the bottom of sample 2 very quickly - anti-solvent effect?
 
 Next run, I want to isolate the blue stuff. For that, I'll need a copy of sample 1 to quench immediately. Also, I now think the blue stuff is cobalt hydroxide.
+
+Maximum yield: 42.0 mg
+
+Measured:
+1) 33.1 mg (wet)
+2) 21.8 mg, 52% yield
+3) 42.5 mg (wet)

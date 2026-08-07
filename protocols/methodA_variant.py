@@ -59,7 +59,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float], li
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "v0.7b: removed anti-solvent limit, added blow-outs, also water option, 05/08/26",
+    "description": "v0.7b: also nitric acid option, about to break everything, 07/08/26",
     "author": "JT-903"
 }
 
@@ -118,6 +118,11 @@ def run(protocol: protocol_api.ProtocolContext):
         description = "water",
         display_color = "#0000FF"
     )
+    nitric_acid = protocol.define_liquid(
+        name = "Nitric acid",
+        description = "solution in water, 1 M",
+        display_color = "#FCFC00"
+    )
 
     reservoir.load_liquid(
         wells = ["A1"],
@@ -143,6 +148,11 @@ def run(protocol: protocol_api.ProtocolContext):
         wells = ["A9"],
         volume = 5000,
         liquid = water_liquid
+    )
+    reservoir.load_liquid(
+        wells = ["A11"],
+        volume = 2500,
+        liquid = nitric_acid
     )
 
     # Task file integration
@@ -245,8 +255,3 @@ def run(protocol: protocol_api.ProtocolContext):
     # Finalising
     pipette.home()
     protocol.comment("<===|- Protocol Complete -|===>")
-    ''' Camera integration
-    for i in range(48):
-        protocol.delay(minutes=60)
-        protocol.capture_image(filename=f"snapshot{i}")
-    #'''

@@ -2,6 +2,7 @@
 
 1) Initial testing to try and fix the bug
 2) Synthesis: 0:3 to 5:3 ethanol:water
+3) Synthesis 2: 0 - 500 uL dilution of 100 uL cobalt solution
 
 ## Initial testing
 
@@ -31,5 +32,11 @@ The pipette overpressure error happened multiple times during the variant synthe
 
 The blue precipitate is almost definitely cobalt hydroxide. See `gotcha.jpg` for proof. Sample 1 will be sent for PXRD at a later date, unless it turns pink.
 
+More ethanol means the blue sticks around for longer.
+
 Lessons learned:
 - `transfer_with_liquid_class` is terrible and just throws up random errors.
+
+## Second synthesis
+
+No problems during synthesis. More dilution does not reduce amount of blue - it just looks less blue.

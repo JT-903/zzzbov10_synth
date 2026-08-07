@@ -39,7 +39,7 @@ Miscellaneous:
 
 The SunLab Vial Rack can actually hold up to 1 mL (but maybe don't fill all the way to the top). The vial rack should be modified to 900 uL.
 
-Do some interesting science!
+Add nitric acid to the samples to hopefully prevent the cobalt hydroxide crashing out.
 
 ## Obligatory mention of *datalab*
 
@@ -52,7 +52,7 @@ Do some interesting science!
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
 - 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate. Yield okay (44-60%).
 - 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful.
-- 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended.
+- 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended. Capy then performed method A variant synthesis with cobalt, but testing dilution levels. There were no errors.
 
 # Appendix
 
