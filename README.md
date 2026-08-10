@@ -52,7 +52,7 @@ Add nitric acid to the samples to hopefully prevent the cobalt hydroxide crashin
 - 21.07.26: Capy performed initial testing.
 - 23.07.26: SMs received, setup options explored. Synthesis delayed to 28.07.
 - 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate. Yield okay (44-60%).
-- 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful.
+- 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful. Yield good, but only okay for anti-solvent.
 - 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended. Capy then performed method A variant synthesis with cobalt, but testing dilution levels. There were no errors.
 
 # Appendix
@@ -69,7 +69,7 @@ Without custom labware definitions:
 
 Most of this information is not present on the labware library or the API documentation. A small amount is present as retired/deprecated "combination" labware.
 
-These lists were collected by simulating the `adapter_compatibility_tester.py` script. Each adapter should be checked after every API release. More information about running this script can be found in the script.
+These lists were collected by simulating the `adapter_compatibility_tester.py` script. Each adapter should be checked after every API release. More information about simulating this script can be found in the script.
 
 ##### opentrons_universal_flat_adapter
 - axygen_96_wellplate_500ul

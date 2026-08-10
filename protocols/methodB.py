@@ -31,8 +31,9 @@ def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
         if delay_time < 0 or delay_time > 600:
             return False, f"Sample {sid}: mixing time must be 0-600 s, got {delay_time}"
         # Overflow clause - modify where necessary
-        if vol_a + vol_b + vol_c + vol_anti > 900:
-            return False, f"Sample {sid}: total volume exceeds well volume: {vol_a+vol_b+vol_c+vol_anti} µL (max 900 µL)"
+        total_vol = vol_a + vol_b
+        if total_vol > 900:
+            return False, f"Sample {sid}: total volume exceeds well volume: {total_vol} µL (max 900 µL)"
 
     return True, "All samples valid"
 
@@ -66,11 +67,11 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - custom labware doesn't fit on adapters yet
-    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_800ul
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_900ul
     hs_mod.close_labware_latch()
     ''' # no hs_mod - look through and hash out 2 lines
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
-    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_800ul
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_900ul
     #'''
 
     # Trash
@@ -153,7 +154,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # Stirring and concentrating
     protocol.comment("-> Mixing and concentrating")
     hs_mod.set_and_wait_for_shake_speed(1200)
-    hs_mod.set_and_wait_for_target_temperature(55) # DO NOT GO ABOVE 56
+    hs_mod.set_and_wait_for_temperature(55) # DO NOT GO ABOVE 56
     protocol.delay(seconds=timeDelay[0])
     hs_mod.deactivate_heater()
     hs_mod.deactivate_shaker()

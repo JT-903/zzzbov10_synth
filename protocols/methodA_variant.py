@@ -4,14 +4,18 @@ import json
 
 # The order in which things are added
 # 1 vol_a; 2 vol_b; 3 vol_c; 4 vol_anti; 5 dil_vol; 6 vol_ha
-ordering = [1, 5, 6, 3, 2, 4] # [1, 5, 6, 3, 2, 4] is recommended; 6 first is a bad idea
+ordering = [1, 5, 6, 3, 2, 4] # [1, 5, 6, 2, 3, 4] is recommended; 6 first is a bad idea
 # the datalab integration could inject the ordering into here
 
 # thanks for the code clara but it's pretty unrecognisable now
 EXAMPLE_DATA = json.loads("""[
-    {"sample_id": 1, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 0, "vol_ha": 0, "cycle_n": 2},
-    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 100, "vol_ha": 100, "cycle_n": 2}
+    {"sample_id": 1, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 0, "vol_ha": 200, "cycle_n": 2},
+    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 100, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 200, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 7, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2}
 ]""") # the datalab integration could inject the json file into here
 
 def validate_sample_parameters(samples) -> tuple[bool, str]:
@@ -46,6 +50,11 @@ def validate_sample_parameters(samples) -> tuple[bool, str]:
             return False, f"Sample {sid}: vol_ha must be non-negative, got {vol_ha}"
         if cycle_n < 1 or not isinstance(cycle_n, int):
             return False, f"Sample {sid}: cycle number must be a positive integer, got {cycle_n}"
+
+        # Overflow clause
+        total_vol = vol_a + vol_b + vol_c + vol_anti + dil_vol + vol_ha
+        if total_vol > 900:
+            return False, f"Sample {sid}: total volume exceeds well volume: {total_vol} µL (max 900 µL)"
         
         # Max sample checking - implicit assumption that vol_a is added first
         if vol_b != 0:
@@ -58,11 +67,6 @@ def validate_sample_parameters(samples) -> tuple[bool, str]:
             max_samples = max_samples - 1
         if vol_ha != 0:
             max_samples = max_samples - 1
-        
-        # Overflow clause
-        total_vol = vol_a + vol_b + vol_c + vol_anti + dil_vol + vol_ha
-        if total_vol > 900:
-            return False, f"Sample {sid}: total volume exceeds well volume: {total_vol} µL (max 900 µL)"
         
     if max_samples < 0:
         return False, f"Too many samples for this protocol: {-max_samples} liquid transfers over maximum"
@@ -85,13 +89,13 @@ def samples_to_lists(samples):
 # Back to my code
 
 def orderingToName(n):
-    names = ["metal nitrate", "1,2,4-triazole", "ammonium thiocyanate", "anti-solvent", "water", "nitric acid"]
+    names = ["metal nitrate", "1,2,4-triazole", "ammonium thiocyanate", "anti-solvent", "diluent", "acid"]
     return names[n-1]
 
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "vBeta: total modularity, hopefully I haven't broken everything, 07/08/26",
+    "description": "vBeta: total modularity, hopefully I haven't broken everything, 10/08/26",
     "author": "JT-903"
 }
 
@@ -107,10 +111,11 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
     hs_plate = hs_adapter.load_labware("axygen_96_wellplate_500ul") # placeholder - custom labware doesn't fit on adapters yet
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_900ul
     hs_mod.close_labware_latch()
     ''' # no hs_mod
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
-    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_800ul
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_900ul
     #'''
 
     # Trash has moved
@@ -153,7 +158,7 @@ def run(protocol: protocol_api.ProtocolContext):
     nitric_acid = protocol.define_liquid(
         name = "Nitric acid",
         description = "solution in water, 1 M",
-        display_color = "#FCFC00"
+        display_color = "#FFFF00"
     )
 
     reservoir.load_liquid(
@@ -215,14 +220,14 @@ def run(protocol: protocol_api.ProtocolContext):
             pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[i], new_tip="never")
         pipette.drop_tip()
     
-    def addSubstance(n, m, K):
+    def addSubstance(n, m, c):
         resIndex = 2*n - 2
         protocol.comment(f"-> Transferring {orderingToName(n)}")
         for i in range(sampleN):
             if theMasterList[n-1][i] == 0:
-                K += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
+                c += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
             else:
-                pipette.pick_up_tip(tips.wells()[1+m*sampleN+i-K])
+                pipette.pick_up_tip(tips.wells()[1+m*sampleN+i-c])
                 #pipette.home() # just in case the overpressure error somehow persists
                 pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[i], new_tip="never")
                 pipette.dynamic_mix(
@@ -230,11 +235,12 @@ def run(protocol: protocol_api.ProtocolContext):
                     dispense_start_location=hs_plate.wells()[i].bottom(z=20),
                     repetitions=theMasterList[6][i],
                     volume=150,
-                    rate=3.0
+                    rate=3.0,
+                    final_push_out=20
                 ) # this could cause precipitation of product - modify for big crystal
                 pipette.blow_out()
                 pipette.drop_tip()
-        return K
+        return c
 
     # -|===> MAIN <===|-
     protocol.home()
@@ -244,7 +250,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-|===> Starting Protocol <===|-")
 
     ''' Notes for users:
-    1) k/K is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the looping index.
+    1) k/c is the tip tracking index; i is the sample index (which is also used for tip tracking); j is the looping index.
         - Please do not try to redefine them. I don't know how spectacularly the rest of the program will break.
     2) There is no built-in concentrating step for the Mn and Zn analogues. This must be done separately.
     '''
