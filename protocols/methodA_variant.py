@@ -158,7 +158,7 @@ def run(protocol: protocol_api.ProtocolContext):
     )
     nitric_acid = protocol.define_liquid(
         name = "Nitric acid",
-        description = "solution in water, 1.00 M",
+        description = "solution in water, 0.94 M",
         display_color = "#FFFF00"
     )
 
@@ -236,10 +236,10 @@ def run(protocol: protocol_api.ProtocolContext):
                     dispense_start_location=hs_plate.wells()[i].bottom(z=20),
                     repetitions=theMasterList[6][i],
                     volume=150,
-                    rate=3.0,
-                    final_push_out=20
+                    rate=3.0
                 ) # this could cause precipitation of product - modify for big crystal
                 pipette.blow_out()
+                pipette.move_to(hs_plate.wells()[i].bottom(z=2))
                 pipette.drop_tip()
         return c
 
