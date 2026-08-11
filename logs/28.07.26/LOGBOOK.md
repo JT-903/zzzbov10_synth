@@ -67,9 +67,9 @@ There is a large amount of blue precipitate and a small amount of red precipitat
 
 ## Yield
 
-- 25.7 mg of red precipitate was isolated from sample 2 (60% yield, confirmed product by PXRD)
+- 25.7 mg of red precipitate was isolated from sample 2 (63% yield, confirmed product by PXRD)
 - 1.4 mg of blue precipitate was isolated from sample 3 (awaiting identification)
-- 18.9 mg of mixed precipitate was collected from sample 3 (assuming all product, 44% yield)
+- 18.9 mg of mixed precipitate was collected from sample 3 (assuming all product, 46% yield)
 
 ## Conclusions for next run
 

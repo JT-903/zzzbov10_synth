@@ -25,9 +25,9 @@ Lessons learned:
 
 Next run, I want to isolate the blue stuff. For that, I'll need a copy of sample 1 to quench immediately. Also, I now think the blue stuff is cobalt hydroxide.
 
-Maximum yield: 42.0 mg
+Maximum yield: 41.0 mg
 
 Measured:
 1) 33.1 mg (wet)
-2) 21.8 mg, 52% yield
+2) 21.8 mg, 53% yield
 3) 42.5 mg (wet)

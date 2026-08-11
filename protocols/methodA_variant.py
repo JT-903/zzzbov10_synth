@@ -13,9 +13,10 @@ EXAMPLE_DATA = json.loads("""[
     {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 0, "vol_ha": 200, "cycle_n": 2},
     {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 100, "vol_ha": 100, "cycle_n": 2},
     {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 200, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 7, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2}
+    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 300, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 400, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 7, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 8, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2}
 ]""") # the datalab integration could inject the json file into here
 
 def validate_sample_parameters(samples) -> tuple[bool, str]:
@@ -95,7 +96,7 @@ def orderingToName(n):
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "vBeta: total modularity, hopefully I haven't broken everything, 10/08/26",
+    "description": "vBeta: total modularity, hopefully I haven't broken everything, 11/08/26",
     "author": "JT-903"
 }
 
@@ -132,22 +133,22 @@ def run(protocol: protocol_api.ProtocolContext):
     # Define liquids in reservoir - makes it pretty in the opentrons app
     cobalt_nitrate = protocol.define_liquid(
         name = "Metal(II) nitrate",
-        description = "solution in water, 0.67 M",
+        description = "solution in water, 0.687 M",
         display_color = "#FF0000"
     )
     trz_ligand = protocol.define_liquid(
         name = "1,2,4-triazole",
-        description = "solution in water, 1.33 M",
+        description = "solution in water, 1.45 M",
         display_color = "#67718A"
     )
     ammonium_thiocyanate = protocol.define_liquid(
         name = "Ammonium thiocyanate",
-        description = "solution in water, 1.33 M",
+        description = "solution in water, 1.31 M",
         display_color = "#88FF99"
     )
     anti_solvent_gen = protocol.define_liquid(
         name = "Anti-solvent",
-        description = "probably neat ethanol",
+        description = "neat ethanol",
         display_color = "#FFFFFF"
     )
     water_liquid = protocol.define_liquid(
@@ -157,7 +158,7 @@ def run(protocol: protocol_api.ProtocolContext):
     )
     nitric_acid = protocol.define_liquid(
         name = "Nitric acid",
-        description = "solution in water, 1 M",
+        description = "solution in water, 1.00 M",
         display_color = "#FFFF00"
     )
 

@@ -30,7 +30,7 @@ No errors on the initial testing for some reason. Vial rack aligned quite well, 
 
 The pipette overpressure error happened multiple times during the variant synthesis while transferring large volumes of ethanol, and is persistent while `transfer_with_liquid_class` is used. Using `transfer` instead prevents this error.
 
-The blue precipitate is almost definitely cobalt hydroxide. See `gotcha.jpg` for proof. Sample 1 will be sent for PXRD at a later date, unless it turns pink.
+The blue precipitate is almost definitely cobalt hydroxide. See `gotcha.jpg` for proof.
 
 More ethanol means the blue sticks around for longer.
 
@@ -48,4 +48,4 @@ When cleaning out the ethanol samples, the liquid was discarded. Then acetone wa
 
 The crystals on the diluted samples are a few hundred um long and roughly cubic.
 
-Yield was hampered heavily by a large amount of pink cobalt hydroxide at the bottom of the diluted runs. Total yield (all six samples combined): 78.5 mg, 62%.
+Yield was hampered heavily by a large amount of pink cobalt hydroxide at the bottom of the diluted runs. Total yield (all six samples combined): 78.5 mg, 64%.
