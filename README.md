@@ -9,6 +9,9 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 - Variant script: in `methodA_variant.py`, the thiocyanate is added before the triazole. This works well and doesn't require the heater-shaker, so is preferred over method A.
 - The method A scripts should be used for Mn, Fe, Co, Ni, and Zn; the method B script should be used only for Cu and Zn.
     - In order to yield the beta-Ni phase, the starting solutions should be made up in nitric acid.
+- Tired of writing sample parameters yourself? In the folder `protocols/quickgen_sampledata` the script `samplegen_varA.py` will write a fully formed set of sample parameters into `tempdata.json`, ready to be pasted into `EXAMPLE_DATA` in `../methodA_variant.py`. Please be kind to it - it has no error checking. This is essentially a clunky macro made to save my sanity. Instructions for use in the script, lines 19-28.
+    - Be warned: the script will delete everything in `tempdata.json` as it begins writing.
+    - The current file was written using 0 - 200 uL anti-solvent and 0 - 200 uL diluent in steps of 50 uL, and 100 uL fixed of everything else. It will not currently run on `../methodA_variant` as it requires 115 pipette tips.
 
 ## Retired features
 
@@ -54,6 +57,7 @@ Add nitric acid to the samples to hopefully prevent the cobalt hydroxide crashin
 - 28.07.26: Capy performed method A synthesis with cobalt, with varied success across the plate. Yield okay (44-60%).
 - 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful. Yield good, but only okay for anti-solvent.
 - 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended. Capy then performed method A variant synthesis with cobalt, but testing dilution levels. There were no errors.
+- 11.08.26: Capy performed method A variant synthesis with cobalt, testing addition of nitric acid, with no errors.
 
 # Appendix
 

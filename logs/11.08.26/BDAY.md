@@ -33,3 +33,5 @@ After 100 minutes:
 6) nothing
 7) small crystals growing on wall, darker red solution
 8) small crystals growing on wall, darker red solution
+
+Images from after 3.5 hours on datalab.

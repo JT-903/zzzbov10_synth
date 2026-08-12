@@ -124,8 +124,9 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Instrument
     protocol.comment("-> Initialising instrument")
-    #pipette = protocol.load_instrument("flex_1channel_1000", "right", tip_racks=[tips])
-    #''' For multi-channel pipette
+    ''' For single channel pipette
+    pipette = protocol.load_instrument("flex_1channel_1000", "right", tip_racks=[tips])
+    #''' # For multi-channel pipette
     pipette = protocol.load_instrument("flex_96channel_200", tip_racks=[tips])
     pipette.configure_nozzle_layout(style=SINGLE, start="H12") # lessons were learned
     #'''
@@ -229,7 +230,6 @@ def run(protocol: protocol_api.ProtocolContext):
                 c += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
             else:
                 pipette.pick_up_tip(tips.wells()[1+m*sampleN+i-c])
-                #pipette.home() # just in case the overpressure error somehow persists
                 pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[i], new_tip="never")
                 pipette.dynamic_mix(
                     aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
