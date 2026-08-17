@@ -14,7 +14,8 @@ EXAMPLE_DATA = json.loads("""[
     {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
     {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
     {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 400, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2}
+    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 200, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 7, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 300, "vol_ha": 100, "cycle_n": 2}
 ]""") # the datalab integration could inject the json file into here
 
 def validate_sample_parameters(samples) -> tuple[bool, str]:

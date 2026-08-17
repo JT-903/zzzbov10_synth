@@ -11,7 +11,7 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
     - In order to yield the beta-Ni phase, the starting solutions should be made up in nitric acid.
 - Tired of writing sample parameters yourself? In the folder `protocols/quickgen_sampledata` the script `samplegen_varA.py` will write a fully formed set of sample parameters into `tempdata.json`, ready to be pasted into `EXAMPLE_DATA` in `../methodA_variant.py`. Please be kind to it - it has no error checking. This is essentially a clunky macro made to save my sanity. Instructions for use in the script, lines 19-28.
     - Be warned: the script will delete everything in `tempdata.json` as it begins writing.
-    - The current file was written using 0 - 200 uL anti-solvent and 0 - 200 uL diluent in steps of 50 uL, and 100 uL fixed of everything else. It will not currently run on `../methodA_variant` as it requires 115 pipette tips.
+    - The current file was written using 0 - 200 uL anti-solvent and 0 - 200 uL diluent in steps of 50 uL, and 100 uL fixed of everything else. It will not currently run on `../methodA_variant.py` as it requires 115 pipette tips.
 
 ## Retired features
 
@@ -38,6 +38,7 @@ Miscellaneous:
 - Issue: The API has no idea if a well on the wellplate overflows. The simulation raises no errors. The Opentrons app raises no errors. The robot raises no errors.
     - This "issue" could be an advantage, as it is possible to lie to the machine about 3D printed or non-standard plates that have been designed to fit both the heater-shaker and the relevant adapter. This would skip having to create custom labware definitions.
 - Issue: the pipette will throw out a "pipette overpressure error" during some `transfer_with_liquid_class` commands but not with others. To work around this, don't use `transfer_with_liquid_class` because the normal `transfer` works perfectly fine with ethanol.
+- Using `Mara_Flex/runs/methodA/initial_testing_launcher.py`, any syntax errors in the protocol appear as garbled 10-line error messages that don't tell you what the problem is.
 
 ### The Current Direction
 
@@ -58,7 +59,7 @@ Add nitric acid to the samples to hopefully prevent the cobalt hydroxide crashin
 - 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful. Yield good, but only okay for anti-solvent.
 - 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended. Capy then performed method A variant synthesis with cobalt, but testing dilution levels. There were no errors.
 - 11.08.26: Capy performed method A variant synthesis with cobalt, testing addition of nitric acid, with no errors.
-- 17.08.26: Planned synthesis with reduced acid concentration.
+- 17.08.26: Capy performed method A variant synthesis with cobalt and reduced acid concentration with no errors.
 
 # Appendix
 

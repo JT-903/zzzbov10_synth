@@ -1,3 +1,3 @@
 # Results
 
-Hopefully they're done by tomorrow.
+Disaster! Sample 1 is contaminated with an unknown substance.

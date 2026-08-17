@@ -43,11 +43,11 @@ Crystals are large but polycrystalline. Images from the microscope on datalab. T
 ## Yields
 
 1) 8.5 mg, 41%, 50 hrs
-2) waiting 144 hrs
+2) 4.9 mg, 24%, 142 hrs
 3) 6.3 mg, 31%, 50 hrs
-4) waiting 144 hrs
-5) waiting 144 hrs
-6) waiting 144 hrs
+4) 13.1 mg, 64%, 142 hrs
+5) 11.9 mg, 58%, 142 hrs
+6) 9.3 mg, 45%, 142 hrs
 7) 11.7 mg, 57%, 50 hrs
 8) 5.1 mg, 25%, 50 hrs
 
