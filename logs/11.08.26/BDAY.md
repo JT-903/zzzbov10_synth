@@ -31,7 +31,24 @@ After 100 minutes:
 4) fewer small polycrystals growing on bottom
 5) nothing
 6) nothing
-7) small crystals growing on wall, darker red solution
-8) small crystals growing on wall, darker red solution
+7) bubbles on wall, darker red solution
+8) bubbles on wall, darker red solution
 
 Images from after 3.5 hours on datalab.
+
+Images from after 46 hours on datalab. Nitric acid slows down the reaction.
+
+Crystals are large but polycrystalline. Images from the microscope on datalab. They look so cool!
+
+## Yields
+
+1) 8.5 mg, 41%, 50 hrs
+2) waiting 144 hrs
+3) 6.3 mg, 31%, 50 hrs
+4) waiting 144 hrs
+5) waiting 144 hrs
+6) waiting 144 hrs
+7) 11.7 mg, 57%, 50 hrs
+8) 5.1 mg, 25%, 50 hrs
+
+Not great. Maybe there will be better yields at a lower acid concentration. As such, the acid has been tenfold diluted.

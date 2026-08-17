@@ -58,6 +58,7 @@ Add nitric acid to the samples to hopefully prevent the cobalt hydroxide crashin
 - 04.08.26: Capy performed method A variant synthesis with cobalt. An error occurred at the end, but otherwise successful. Yield good, but only okay for anti-solvent.
 - 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended. Capy then performed method A variant synthesis with cobalt, but testing dilution levels. There were no errors.
 - 11.08.26: Capy performed method A variant synthesis with cobalt, testing addition of nitric acid, with no errors.
+- 17.08.26: Planned synthesis with reduced acid concentration.
 
 # Appendix
 
