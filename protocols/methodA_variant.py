@@ -4,18 +4,16 @@ import json
 
 # The order in which things are added
 # 1 vol_a; 2 vol_b; 3 vol_c; 4 vol_anti; 5 dil_vol; 6 vol_ha
-ordering = [1, 5, 6, 3, 2, 4] # [1, 5, 6, 2, 3, 4] is recommended; 6 first is a bad idea
+ordering = [1, 6, 5, 3, 2, 4] # [1, 5, 6, 2, 3, 4] is recommended; 6 first is a bad idea
 # the datalab integration could inject the ordering into here
 
 # thanks for the code clara but it's pretty unrecognisable now
 EXAMPLE_DATA = json.loads("""[
     {"sample_id": 1, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 100, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 100, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 200, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 300, "dil_vol": 0, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 6, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 200, "vol_ha": 100, "cycle_n": 2},
-    {"sample_id": 7, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 300, "vol_ha": 100, "cycle_n": 2}
+    {"sample_id": 2, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 25, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 3, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 50, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 4, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 75, "vol_ha": 100, "cycle_n": 2},
+    {"sample_id": 5, "vol_a": 100, "vol_b": 100, "vol_c": 100, "vol_anti": 0, "dil_vol": 100, "vol_ha": 100, "cycle_n": 2}
 ]""") # the datalab integration could inject the json file into here
 
 def validate_sample_parameters(samples) -> tuple[bool, str]:
@@ -95,7 +93,7 @@ def orderingToName(n):
 # This isn't necessary
 metadata = {
     "protocolName": "ZZZBOV10 Variant Synthesis",
-    "description": "v1.0: full release! 13/08/26",
+    "description": "v1.1a: camera compatible 19/08/26",
     "author": "JT-903"
 }
 
@@ -115,7 +113,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod.close_labware_latch()
     ''' # no hs_mod
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
-    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_900ul
+    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_900ul on non-standard mounts
     #'''
 
     # Trash has moved
@@ -218,7 +216,7 @@ def run(protocol: protocol_api.ProtocolContext):
         protocol.comment(f"-> Transferring {orderingToName(n)}")
         pipette.pick_up_tip(tips.wells()[0])
         for i in range(sampleN):
-            pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[i], new_tip="never")
+            pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[-i-1], new_tip="never")
         pipette.drop_tip()
     
     def addSubstance(n, m, c):
@@ -229,16 +227,16 @@ def run(protocol: protocol_api.ProtocolContext):
                 c += 1 # don't waste an unused pipette, and adjust indices for next tip pick-up
             else:
                 pipette.pick_up_tip(tips.wells()[1+m*sampleN+i-c])
-                pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[i], new_tip="never")
+                pipette.transfer(theMasterList[n-1][i], reservoir.wells()[resIndex], hs_plate.wells()[-i-1], new_tip="never")
                 pipette.dynamic_mix(
-                    aspirate_start_location=hs_plate.wells()[i].bottom(z=2),
-                    dispense_start_location=hs_plate.wells()[i].bottom(z=20),
+                    aspirate_start_location=hs_plate.wells()[-i-1].bottom(z=2),
+                    dispense_start_location=hs_plate.wells()[-i-1].bottom(z=20),
                     repetitions=theMasterList[6][i],
                     volume=150,
                     rate=3.0
                 ) # this could cause precipitation of product - modify for big crystal
                 pipette.blow_out()
-                pipette.move_to(hs_plate.wells()[i].bottom(z=2))
+                pipette.move_to(hs_plate.wells()[-i-1].bottom(z=2))
                 pipette.drop_tip()
         return c
 

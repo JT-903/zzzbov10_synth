@@ -163,8 +163,3 @@ def run(protocol: protocol_api.ProtocolContext):
     pipette.home()
     hs_mod.open_labware_latch()
     protocol.comment("<===|- Protocol Complete -|===>")
-    ''' Camera integration
-    for i in range(48):
-        protocol.delay(minutes=60)
-        protocol.capture_image(filename=f"snapshot{i}")
-    #'''
