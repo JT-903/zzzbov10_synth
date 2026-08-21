@@ -11,6 +11,7 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 - Tired of writing sample parameters yourself? In the folder `protocols/quickgen_sampledata` the script `samplegen_varA.py` will write a fully formed set of sample parameters into `tempdata.json`, ready to be pasted into `EXAMPLE_DATA` in `../methodA_variant.py`. Please be kind to it - it has no error checking. This is essentially a clunky macro made to save my sanity. Instructions for use in the script, lines 19-28.
     - Be warned: the script will delete everything in `tempdata.json` as it begins writing.
     - The current file was written using 0 - 200 uL anti-solvent and 0 - 200 uL diluent in steps of 50 uL, and 100 uL fixed of everything else. It will not currently run on `../methodA_variant.py` as it requires 115 pipette tips.
+- RPi camera functions: the script `camcamlab/capycam.py` generates a web app where various camera processes can be called. This should be loaded onto the RPi (or any other device with the camera attached).
 
 ## Retired features
 
