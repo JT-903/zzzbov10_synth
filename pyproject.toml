@@ -5,5 +5,8 @@ description = "Automated synthesis of ZZZBOV10 using Capybara"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.141.1",
     "opentrons>=9.1.0",
+    "pypylon>=26.7",
+    "uvicorn>=0.52.4",
 ]

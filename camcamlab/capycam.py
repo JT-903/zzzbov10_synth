@@ -1,8 +1,5 @@
-# /// script
-# requires-python = ">=3.12"
-# dependencies = ["fastapi", "uvicorn", "pypylon"]
-# ///
-"""Take pictures with a Basler camera over HTTP.
+'''
+Take pictures with a Basler camera over HTTP.
 
 Launch with:
 
@@ -15,13 +12,13 @@ activities, whose results go into the workflow history and are size limited.
 Camera settings (exposure, gain, ROI, pixel format, auto functions off, ...)
 are not route parameters. Can tune them in pylon Viewer, save the features file
 next to this script as capycam.pfs, and every grab will use them.
-"""
+'''
 
 import uuid
 from pathlib import Path
 
 import anyio
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.responses import FileResponse
 from pypylon import genicam, pylon
 
@@ -57,12 +54,12 @@ def grab(path: Path) -> None:
         camera.Close()
 
 
-async def takeTimelapse(path: Path, duration: int, grabInterval: float) -> tuple[int, int]:
-    '''Open the camera, grab frames regularly over a time period, save them, close.
+async def takeTimelapse(path: Path, duration: int, grabInterval: float) -> None:
+    """Open the camera, grab frames regularly over a time period, save them, close.
     
     The inputted path should be a directory.
     Error catching must stop grabbing and close the camera afterwards.
-    '''
+    """
     with pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice()) as camera:
         # Open camera to access settings
         camera.Open()
@@ -73,7 +70,7 @@ async def takeTimelapse(path: Path, duration: int, grabInterval: float) -> tuple
                 # settings applied, which would silently spoil a run.
                 pylon.FeaturePersistence.Load(str(SETTINGS), camera.GetNodeMap(), True)
 
-            ''' "Reliable" software triggers for the camera that actually just throw a timeout
+            #''' Reliable software triggers for the camera - throws timeout on emulation
             camera.TriggerSelector.Value = "FrameStart"
             camera.TriggerMode.Value = "On"
             camera.TriggerSource.Value = "Software"
@@ -88,8 +85,8 @@ async def takeTimelapse(path: Path, duration: int, grabInterval: float) -> tuple
 
             # Loop grabbing and saving
             while grabCounter <= lastGrab:
-                # "Reliable" trigger
-                #camera.ExecuteSoftwareTrigger()
+                # Reliable trigger
+                camera.ExecuteSoftwareTrigger()
 
                 # Grab frame
                 with camera.RetrieveResult(round(2000 * grabInterval), pylon.TimeoutHandling_ThrowException) as result:
@@ -110,7 +107,7 @@ async def takeTimelapse(path: Path, duration: int, grabInterval: float) -> tuple
                 grabCounter += 1
         finally:
             camera.StopGrabbing()
-    return lastGrab - failCounter + 1, lastGrab + 1
+            print(f"Timelapse finished with {"no" if failCounter == 0 else failCounter} errors.")
 
 
 @app.get("/")
@@ -146,8 +143,23 @@ async def snap(request: Request) -> dict:
 
 
 @app.get("/timelapse/")
+async def timelapse(background_tasks: BackgroundTasks, name: str="temp", duration: int=60, grabInterval: float=5.0):
+    """Make a *new* folder, then initiate a timelapse. Queries appreciated"""
+    IMAGES.mkdir(exist_ok=True)
+    newFolder = IMAGES / name
+    try:
+        newFolder.mkdir(exist_ok=False)
+    except FileExistsError as e:
+        raise HTTPException(403, str(e))
+
+    # This prevents browser time-outs
+    background_tasks.add_task(takeTimelapse, newFolder, duration, grabInterval)
+
+    return {"name": name, "duration": f"{duration} s", "grabInterval": f"{grabInterval} s", "status": "started successfully"}
+''' # Old timelapse if browser timeout not a problem
+@app.get("/timelapse/")
 async def timelapse(name: str="temp", duration: int=10, grabInterval: float=5.0):
-    '''Make a *new* folder, then initiate a timelapse. Queries appreciated'''
+    """Make a *new* folder, then initiate a timelapse. Queries appreciated"""
     IMAGES.mkdir(exist_ok=True)
     newFolder = IMAGES / name
     try:
@@ -163,11 +175,11 @@ async def timelapse(name: str="temp", duration: int=10, grabInterval: float=5.0)
         "grabInterval": f"{grabInterval} s",
         "status": f"{status[0]} out of {status[1]} grabs succeeded"
     }
+#'''
 
 
 @app.get("/image/{name}")
 async def image(name: str) -> FileResponse:
-    #path = IMAGES / Path(name).name
     path = IMAGES / name
     if not path.is_file():
         raise HTTPException(404, f"no such image {name}")
