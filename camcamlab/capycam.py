@@ -5,6 +5,7 @@ Launch with:
 
     uv run capycam.py                    # http://127.0.0.1:8000
     PYLON_CAMEMU=1 uv run capycam.py     # emulated camera, no hardware needed
+    # be warned: software triggers don't work on an emulated camera, so will cause a timeout
 
 /snap returns a URL rather than image bytes: it is called from Temporal
 activities, whose results go into the workflow history and are size limited.
@@ -108,6 +109,7 @@ async def takeTimelapse(path: Path, duration: int, grabInterval: float) -> None:
         finally:
             camera.StopGrabbing()
             print(f"Timelapse finished with {"no" if failCounter == 0 else failCounter} errors.")
+            #return lastGrab + 1 - failCounter, lastGrab + 1 # for old timelapse
 
 
 @app.get("/")
@@ -142,6 +144,7 @@ async def snap(request: Request) -> dict:
     return {"name": name, "url": str(request.url_for("image", name=name))}
 
 
+#''' New timelapse
 @app.get("/timelapse/")
 async def timelapse(background_tasks: BackgroundTasks, name: str="temp", duration: int=60, grabInterval: float=5.0):
     """Make a *new* folder, then initiate a timelapse. Queries appreciated"""

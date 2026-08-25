@@ -60,6 +60,7 @@ Use the camera to observe crystallisation. Maybe this could show us how to make 
 - 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended. Capy then performed method A variant synthesis with cobalt, but testing dilution levels. There were no errors.
 - 11.08.26: Capy performed method A variant synthesis with cobalt, testing addition of nitric acid, with no errors.
 - 17.08.26: Capy performed method A variant synthesis with cobalt and reduced acid concentration with no errors. Ethanol is probably not the way to form big crystals.
+- 25.08.26: Capy will perform initial testing, then method A variant synthesis with cobalt. Capycam will then take a timelapse over four hours to observe crystallisation.
 
 # Appendix
 

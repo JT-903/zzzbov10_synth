@@ -3,8 +3,8 @@ from opentrons.protocol_api import SINGLE, ALL
 
 # i feel obligated
 metadata = {
-    "protocolName": "Capy's trial by alcohol poisoning",
-    "description": "why did the last run raise an error? 05/08/26",
+    "protocolName": "The Big One 2026",
+    "description": "it's literally just a calibration test 25/08/26",
     "author": "JT-903"
 }
 
@@ -22,7 +22,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod.close_labware_latch()
     ''' # no hs_mod
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
-    hs_plate.set_offset(x=-1, y=0, z=0) # because we're using sunlab_96_vialrack_800ul
+    hs_plate.set_offset(x=-1, y=0.5, z=12) # because we're using sunlab_96_printedrack_900ul
     #'''
 
     # Trash
@@ -35,20 +35,21 @@ def run(protocol: protocol_api.ProtocolContext):
     
     # -|===> MAIN <===|-
     protocol.home()
-    antiClass = protocol.get_liquid_class("ethanol_80")
-    pipette.well_bottom_clearance.aspirate = 2 # labware difference
-    pipette.well_bottom_clearance.dispense = 2 # for safety
+    pipette.well_bottom_clearance.aspirate = 1.5 # let's see
     protocol.comment("-|===> Starting Protocol <===|-")
 
-    # Capy drinks and spits out 1000 uL of ethanol
+    # Part 1: calibration test
     pipette.pick_up_tip(tips.wells()[0])
-    pipette.transfer_with_liquid_class(antiClass, 300, reservoir.wells()[6], reservoir.wells()[11], new_tip="never")
-    pipette.transfer_with_liquid_class(antiClass, 200, reservoir.wells()[6], reservoir.wells()[11], new_tip="never")
-    pipette.transfer_with_liquid_class(antiClass, 500, reservoir.wells()[6], reservoir.wells()[11], new_tip="never")
-    pipette.move_to(hs_plate.wells()[0].bottom(z=2))
-    pipette.home()
-    pipette.move_to(hs_plate.wells()[12].bottom(z=28))
-    pipette.home()
+    pipette.move_to(hs_plate.wells()[0].bottom(z=1))
+    pipette.move_to(hs_plate.wells()[7].bottom(z=1))
+    pipette.move_to(hs_plate.wells()[-8].bottom(z=1))
+    pipette.move_to(hs_plate.wells()[-5].bottom(z=1))
+    pipette.move_to(hs_plate.wells()[-1].bottom(z=1))
+
+    # Part 2: can the aspirate get lower?
+    pipette.well_bottom_clearance.dispense = 1.5
+    pipette.aspirate(200, reservoir.wells()[6])
+    pipette.dispense(200, reservoir.wells()[6])
     pipette.drop_tip()
 
     # Finalising

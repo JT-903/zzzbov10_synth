@@ -113,7 +113,7 @@ def run(protocol: protocol_api.ProtocolContext):
     hs_mod.close_labware_latch()
     ''' # no hs_mod
     hs_plate = protocol.load_labware("axygen_96_wellplate_500ul", "D3")
-    hs_plate.set_offset(x=-1, y=0.5, z=0) # because we're using sunlab_96_vialrack_900ul on non-standard mounts
+    hs_plate.set_offset(x=-1, y=0.5, z=12) # because we're using sunlab_96_printedrack_900ul on non-standard mounts
     #'''
 
     # Trash has moved
@@ -243,7 +243,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # -|===> MAIN <===|-
     protocol.home()
     sampleN = len(samples) # used for looping and indexing later
-    pipette.well_bottom_clearance.aspirate = 2 # labware difference
+    pipette.well_bottom_clearance.aspirate = 1.5 # if initial testing part 2 fails, this is reverted to 2
     k = 0
     protocol.comment("-|===> Starting Protocol <===|-")
 
