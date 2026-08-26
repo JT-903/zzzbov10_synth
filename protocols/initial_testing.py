@@ -4,7 +4,7 @@ from opentrons.protocol_api import SINGLE, ALL
 # i feel obligated
 metadata = {
     "protocolName": "The Big One 2026",
-    "description": "it's literally just a calibration test 25/08/26",
+    "description": "it's literally just a calibration test 26/08/26",
     "author": "JT-903"
 }
 
@@ -15,6 +15,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Initialising deck")
     tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "B2")
     reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "C1")
+    reservoir.set_offset(x=-0.5, y=0, z=0) # slightly better alignment
     ''' with hs_mod
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter")
@@ -35,22 +36,30 @@ def run(protocol: protocol_api.ProtocolContext):
     
     # -|===> MAIN <===|-
     protocol.home()
-    pipette.well_bottom_clearance.aspirate = 1.5 # let's see
+    pipette.well_bottom_clearance.aspirate = 2 # NO
     protocol.comment("-|===> Starting Protocol <===|-")
 
     # Part 1: calibration test
     pipette.pick_up_tip(tips.wells()[0])
     pipette.move_to(hs_plate.wells()[0].bottom(z=1))
-    pipette.move_to(hs_plate.wells()[7].bottom(z=1))
-    pipette.move_to(hs_plate.wells()[-8].bottom(z=1))
-    pipette.move_to(hs_plate.wells()[-5].bottom(z=1))
-    pipette.move_to(hs_plate.wells()[-1].bottom(z=1))
+    protocol.delay(seconds=5) # gives some time for adjustments
+    pipette.move_to(hs_plate.wells()[0].bottom(z=30))
 
-    # Part 2: can the aspirate get lower?
-    pipette.well_bottom_clearance.dispense = 1.5
-    pipette.aspirate(200, reservoir.wells()[6])
-    pipette.dispense(200, reservoir.wells()[6])
-    pipette.drop_tip()
+    pipette.move_to(hs_plate.wells()[7].bottom(z=1))
+    protocol.delay(seconds=5)
+    pipette.move_to(hs_plate.wells()[0].bottom(z=30))
+
+    pipette.move_to(hs_plate.wells()[-8].bottom(z=1))
+    protocol.delay(seconds=5)
+    pipette.move_to(hs_plate.wells()[0].bottom(z=30))
+
+    pipette.move_to(hs_plate.wells()[-5].bottom(z=1))
+    protocol.delay(seconds=5)
+    pipette.move_to(hs_plate.wells()[0].bottom(z=30))
+
+    pipette.move_to(hs_plate.wells()[-1].bottom(z=1))
+    protocol.delay(seconds=5)
+    pipette.move_to(hs_plate.wells()[0].bottom(z=30))
 
     # Finalising
     pipette.home()

@@ -12,6 +12,7 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
     - Be warned: the script will delete everything in `tempdata.json` as it begins writing.
     - The current file was written using 0 - 200 uL anti-solvent and 0 - 200 uL diluent in steps of 50 uL, and 100 uL fixed of everything else. It will not currently run on `../methodA_variant.py` as it requires 115 pipette tips.
 - RPi camera functions: the script `camcamlab/capycam.py` generates a web app where various camera processes can be called. This should be loaded onto the RPi (or any other device with the camera attached).
+- `initial_testing.py` is now a calibration script that tests each corner of the vial rack plus one extra point on the camera row.
 
 ## Retired features
 
