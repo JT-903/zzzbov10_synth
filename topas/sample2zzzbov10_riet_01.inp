@@ -1,0 +1,91 @@
+'--------------------------------------------------------------
+'Input File for simple Rietveld Refinement
+'Replace any $, # or text after ---> as needed
+'Use Ta-> button to save/send to topas; Ta button to launch topas; run in topas with red arrow
+'--------------------------------------------------------------
+r_wp  32.4809483 r_exp  7.72331411 r_p  23.0330862 r_wp_dash  69.1720861 r_p_dash  67.1042718 r_exp_dash  16.4477263 weighted_Durbin_Watson  0.280239623 gof  4.20557132
+
+'--------------------------------------------------------------
+'General information about refinement here
+'Remove commented lines as required
+'--------------------------------------------------------------
+iters 100000
+chi2_convergence_criteria 0.001
+'do_errors
+
+'--------------------------------------------------------------
+'Information on datafile etc here
+'Check that default weighting is appropriate for your data
+'--------------------------------------------------------------
+xdd sample2zzzbov10.raw
+	'convolution_step MUST be 1 here: data step is 0.0203 deg and the
+	'sharpest peaks are only ~0.08 deg FWHM (4 points). The template
+	'default of 4 convolutes on a grid a full FWHM wide.
+	x_calculation_step = Yobs_dx_at(Xo); convolution_step 1
+	bkg @  118.696281`  105.697169` -3.99841301` -1.7104885`  4.50425257`  0.584894274`
+	Simple_Axial_Model(!axial, 10.92987)
+	
+	'Bragg Brentano, no monochromator, Cu Ka1/Ka2 2 line emission
+	LP_Factor(!th2_monochromator, 0)
+	CuKa2_analyt(0.0001)
+
+	'Observed peaks sit ~0.069 deg BELOW the positions predicted by the
+	'cell, near-constant from 10 to 60 deg -> zero error, not displacement
+	'(displacement would fall off as cos(theta)). Starting value is the
+	'measured offset. Do NOT enable both of these at once.
+	Zero_Error(@, -0.069)
+	'Specimen_Displacement(@, 0)
+
+	
+
+'--------------------------------------------------------------
+'Information on structure
+'Change recurring numbers in coordinates as required e.g. 0.3333 to =1/3;
+'--------------------------------------------------------------
+	str
+		space_group "Aba2"
+		'Cell now refined. Limits are ~1.5% either side of the 1979 values -
+		'wide enough to move, tight enough that it cannot run away and
+		'start swapping reflection assignments.
+		a @  7.801 min  7.68 max  7.92
+		b @ 16.331 min 16.08 max 16.58
+		c @  9.738 min  9.59 max  9.89
+		al 90       
+		be 90       
+		ga 90       
+		volume  1240.603
+
+		'Grouped displacement parameters - 3 refined, not 12.
+		prm bco     1.5 min 0.2 max 8    'Co
+		prm bs      2.5 min 0.2 max 10   'S
+		prm blight  3.5 min 0.2 max 12   'C and N together
+		prm !bh     6.0                  'H fixed - powder data cannot see these
+
+		site Co1    x 0.00000       y 0.00000       z 0.00000       occ Co   1  beq = bco;
+		site S1     x 0.42994       y -0.20624      z -0.01300      occ S    1  beq = bs;
+		site C1     x 0.25790       y -0.14950      z -0.00100      occ C    1  beq = blight;
+		site N1     x 0.13750       y -0.10890      z 0.01400       occ N    1  beq = blight;
+		site N2     x 0.19500       y 0.12040       z 0.19500       occ N    1  beq = blight;
+		site N3     x 0.16800       y 0.04100       z 0.16500       occ N    1  beq = blight;
+		site C2     x 0.25800       y 0.00320       z 0.26000       occ C    1  beq = blight;
+		site N4     x 0.15800       y 0.05330       z -0.15300      occ N    1  beq = blight;
+		site C3     x 0.29900       y 0.12700       z 0.30300       occ C    1  beq = blight;
+		site H1     x 0.14200       y 0.17000       z 0.14100       occ H    1  beq = bh;
+		site H2     x 0.26300       y -0.05500      z 0.26900       occ H    1  beq = bh;
+		site H3     x 0.33600       y 0.17700       z 0.34200       occ H    1  beq = bh;
+
+		scale @  9.02132841e-007`
+		r_bragg  28.7448909
+		'Starting values set from the MEASURED widths: FWHM is ~0.10-0.14 deg
+		'and nearly flat with angle, so W dominates and U is small.
+		'Refine pku, pkw, pkx. Leave pkv, pky, pkz fixed.
+		TCHZ_Peak_Type(pku, 0.001,!pkv, 0.0,pkw, 0.010,!pkz, 0.0,pkx, 0.03,!pky, 0.0)
+
+		'Preferred orientation. This is a 1-D chain compound, so needles are
+		'likely and needles align in a flat-plate holder.
+		'Order 4 only - higher orders will fit anything and mean nothing.
+		'CHECK: the correction factors should stay roughly within 0.7-1.4.
+		'If they go far outside that, PO is absorbing some other error.
+		PO_Spherical_Harmonics(sh, 4)
+
+		Phase_Density_g_on_cm3( 7.47355)
