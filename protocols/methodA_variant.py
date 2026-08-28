@@ -104,7 +104,9 @@ def run(protocol: protocol_api.ProtocolContext):
     # Labware - best configuration? avoids collisions
     protocol.comment("-> Initialising deck")
     tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "B2")
+    tips.set_offset(x=0, y=0, z=0)
     reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "C1")
+    reservoir.set_offset(x=-0.5, y=0, z=0) # because we're using an axygen 12-well reservoir
     ''' with hs_mod
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
@@ -123,7 +125,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("-> Initialising instrument")
     ''' For single channel pipette
     pipette = protocol.load_instrument("flex_1channel_1000", "right", tip_racks=[tips])
-    #''' # For multi-channel pipette
+    ''' # For multi-channel pipette
     pipette = protocol.load_instrument("flex_96channel_200", tip_racks=[tips])
     pipette.configure_nozzle_layout(style=SINGLE, start="H12") # lessons were learned
     #'''
@@ -212,6 +214,7 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # The Modularity Functions - the reason I rewrote everything
     def firstThingsFirst(n):
+        """Adds the first solution to the wells"""
         resIndex = 2*n - 2
         protocol.comment(f"-> Transferring {orderingToName(n)}")
         pipette.pick_up_tip(tips.wells()[0])
@@ -220,6 +223,7 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette.drop_tip()
     
     def addSubstance(n, m, c):
+        """Adds an additional substance to the wells"""
         resIndex = 2*n - 2
         protocol.comment(f"-> Transferring {orderingToName(n)}")
         for i in range(sampleN):
@@ -234,7 +238,7 @@ def run(protocol: protocol_api.ProtocolContext):
                     repetitions=theMasterList[6][i],
                     volume=150,
                     rate=3.0
-                ) # this could cause precipitation of product - modify for big crystal
+                )
                 pipette.blow_out()
                 pipette.move_to(hs_plate.wells()[-i-1].bottom(z=2))
                 pipette.drop_tip()
@@ -243,7 +247,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # -|===> MAIN <===|-
     protocol.home()
     sampleN = len(samples) # used for looping and indexing later
-    pipette.well_bottom_clearance.aspirate = 1.5 # if initial testing part 2 fails, this is reverted to 2
+    pipette.well_bottom_clearance.aspirate = 2 # labware difference
     k = 0
     protocol.comment("-|===> Starting Protocol <===|-")
 

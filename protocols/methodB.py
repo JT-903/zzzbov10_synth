@@ -7,7 +7,7 @@ EXAMPLE_DATA = json.loads("""[
     {"sample_id": 1, "vol_a": 200, "vol_b": 80, "delay_time": 60},
     {"sample_id": 2, "vol_a": 200, "vol_b": 80, "delay_time": 120},
     {"sample_id": 3, "vol_a": 200, "vol_b": 80, "delay_time": 180}
-]""") # vol_a, vol_b, delay_time are the only values used as the protocol is very simple
+]""")
 
 def validate_sample_parameters(samples) -> tuple[bool, str]: # max vol 200 ul
     """Validate sample parameters (dict-based version)."""
@@ -51,7 +51,7 @@ def samples_to_lists(samples) -> tuple[list[float], list[float], list[float]]:
 # This isn't necessary
 metadata = {
     "protocolName": "Cu/Zn Analogue Synthesis",
-    "description": "v0.6b: rejigged ordering for mixing and concentrating, modernised, 07/08/26",
+    "description": "v0.6c: rejigged ordering for mixing and concentrating, modernised, 28/08/26",
     "author": "JT-903"
 }
 
@@ -62,7 +62,9 @@ def run(protocol: protocol_api.ProtocolContext):
     # Labware - best configuration? avoids collisions
     protocol.comment("-> Initialising deck")
     tips = protocol.load_labware("opentrons_flex_96_filtertiprack_200ul", "B2")
+    tips.set_offset(x=0, y=0, z=0)
     reservoir = protocol.load_labware("opentrons_tough_12_reservoir_22ml", "C1")
+    reservoir.set_offset(x=-0.5, y=0, z=0) # because we're using an axygen 12-well reservoir
     #''' # with hs_mod
     hs_mod = protocol.load_module("heaterShakerModuleV1", "D3")
     hs_adapter = hs_mod.load_adapter("opentrons_universal_flat_adapter") # opentrons_universal_flat_adapter is the one we have
@@ -79,8 +81,9 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Instrument
     protocol.comment("-> Initialising instrument")
-    #pipette = protocol.load_instrument("flex_1channel_1000", "right", tip_racks=[tips])
-    #''' # For multi-channel pipette
+    ''' For single channel pipette
+    pipette = protocol.load_instrument("flex_1channel_1000", "right", tip_racks=[tips])
+    ''' # For multi-channel pipette
     pipette = protocol.load_instrument("flex_96channel_200", tip_racks=[tips])
     pipette.configure_nozzle_layout(style=SINGLE, start="H12") # lessons were learned
     #'''

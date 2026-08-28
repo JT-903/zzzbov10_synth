@@ -11,7 +11,8 @@ Clara's code comes from Capybara's dev branch: `modules/capy_mof_hardcode.py`.
 - Tired of writing sample parameters yourself? In the folder `protocols/quickgen_sampledata` the script `samplegen_varA.py` will write a fully formed set of sample parameters into `tempdata.json`, ready to be pasted into `EXAMPLE_DATA` in `../methodA_variant.py`. Please be kind to it - it has no error checking. This is essentially a clunky macro made to save my sanity. Instructions for use in the script, lines 19-28.
     - Be warned: the script will delete everything in `tempdata.json` as it begins writing.
     - The current file was written using 0 - 200 uL anti-solvent and 0 - 200 uL diluent in steps of 50 uL, and 100 uL fixed of everything else. It will not currently run on `../methodA_variant.py` as it requires 115 pipette tips.
-- RPi camera functions: the script `camcamlab/capycam.py` generates a web app where various camera processes can be called. This should be loaded onto the RPi (or any other device with the camera attached).
+- RPi camera functions: the script `camcamlab/capycam.py` generates a web app where various camera processes can be called. This should be loaded onto the RPi (or any other device with the camera attached). Consult the file for functions.
+    - Two camera settings files (.pfs) are in `camcamlab`. One is default settings; the other has max exposure and no gain for a much less grainy image, but is limited to max 1 fps, as well as a little contrast and colour correction.
 - `initial_testing.py` is now a calibration script that tests each corner of the vial rack plus one extra point on the camera row.
 
 ## Retired features
@@ -43,9 +44,9 @@ Miscellaneous:
 
 ### The Current Direction
 
-The protocol has been rewritten to fill backwards from H12. This is to allow the camera mounted on D4 to view the samples.
+-{{ When you leave, you will not be where you were. You will be closer. }}-
 
-Use the camera to observe crystallisation. Maybe this could show us how to make a big single crystal. Or maybe not. Discovery is exciting, yes?
+-{{ Or maybe not. Discovery is exciting, yes? }}-
 
 ## Obligatory mention of *datalab*
 
@@ -61,7 +62,7 @@ Use the camera to observe crystallisation. Maybe this could show us how to make 
 - 06.08.26: Capy performed initial testing with no errors, then method A variant synthesis with cobalt. The same error as last time occurred at the anti-solvent transfer, but with a couple of hotfixes the protocol was completed as intended. Capy then performed method A variant synthesis with cobalt, but testing dilution levels. There were no errors.
 - 11.08.26: Capy performed method A variant synthesis with cobalt, testing addition of nitric acid, with no errors.
 - 17.08.26: Capy performed method A variant synthesis with cobalt and reduced acid concentration with no errors. Ethanol is probably not the way to form big crystals.
-- 25.08.26: Capy will perform initial testing, then method A variant synthesis with cobalt. Capycam will then take a timelapse over four hours to observe crystallisation.
+- 25.08.26: Capy performed initial testing, then method A variant synthesis with cobalt. Capycam then took a timelapse over four hours to observe crystallisation.
 
 # Appendix
 

@@ -3,11 +3,12 @@ from opentrons.protocol_api import SINGLE, ALL
 
 # i feel obligated
 metadata = {
-    "protocolName": "The Big One 2026",
+    "protocolName": "Calibration test",
     "description": "it's literally just a calibration test 26/08/26",
     "author": "JT-903"
 }
 
+# NECESSARY
 requirements = {"robotType": "Flex", "apiLevel": "2.27"}
 
 def run(protocol: protocol_api.ProtocolContext):
@@ -36,7 +37,7 @@ def run(protocol: protocol_api.ProtocolContext):
     
     # -|===> MAIN <===|-
     protocol.home()
-    pipette.well_bottom_clearance.aspirate = 2 # NO
+    pipette.well_bottom_clearance.aspirate = 2 # labware difference
     protocol.comment("-|===> Starting Protocol <===|-")
 
     # Part 1: calibration test

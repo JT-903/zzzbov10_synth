@@ -7,26 +7,27 @@ Launch with:
     PYLON_CAMEMU=1 uv run capycam.py     # emulated camera, no hardware needed
     # be warned: software triggers don't work on an emulated camera, so will cause a timeout
 
-/snap returns a URL rather than image bytes: it is called from Temporal
-activities, whose results go into the workflow history and are size limited.
+/snap returns a URL rather than image bytes: it is called from Temporal activities, whose
+results go into the workflow history and are size limited.
 
 This program uses the headless version of OpenCV, which cannot make pop-up windows. I am sorry,
 but I was having trouble with the normal version. Commands such as cv2.destroyAllWindows() or
 any command that generates a window with OpenCV do not work and will raise an error.
 
-Camera settings (exposure, gain, ROI, pixel format, auto functions off, ...)
-are not route parameters. Can tune them in pylon Viewer, save the features file
-next to this script as capycam.pfs, and every grab will use them.
+Camera settings (exposure, gain, ROI, pixel format, auto functions off, ...) are not route
+parameters. Can tune them in pylon Viewer, save the features file next to this script as
+capycam.pfs, and every grab will use them.
 '''
-
+# Utility
 import uuid
 from pathlib import Path
-
+# Web app
 import anyio
-import cv2
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.responses import FileResponse
+# Camera
 from pypylon import genicam, pylon
+import cv2
 
 IMAGES = Path("capycam_images")
 SETTINGS = Path(__file__).with_name("capycam.pfs")
@@ -37,23 +38,33 @@ def grab(path: Path) -> None:
     """Open the camera, grab one frame, write it to path, close again.
 
     Saved as TIFF in the sensor's native pixel format: lossless, and it keeps
-    the full bit depth of a 12- or 16-bit mono camera.
+    the full bit depth of a 12- or 16-bit mono camera. Matt coded this function,
+    so it looks a bit different
     """
     camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+    # Open camera to access settings
     camera.Open()
     try:
+        # Take settings from file
         if SETTINGS.is_file():
             # validate=True: fail loudly rather than shoot with half the
             # settings applied, which would silently spoil a run.
             pylon.FeaturePersistence.Load(str(SETTINGS), camera.GetNodeMap(), True)
+        
         camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+
+        # Grab frame
         result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
         if not result.GrabSucceeded():
+            # Throw error
             raise RuntimeError(f"grab failed: {result.ErrorDescription}")
-        image = pylon.PylonImage()
-        image.AttachGrabResultBuffer(result)
-        image.Save(pylon.ImageFileFormat_Tiff, str(path))
-        image.Release()
+        else:
+            # Save image
+            image = pylon.PylonImage()
+            image.AttachGrabResultBuffer(result)
+            image.Save(pylon.ImageFileFormat_Tiff, str(path))
+            # Release resources
+            image.Release()
         result.Release()
     finally:
         camera.StopGrabbing()
@@ -84,7 +95,7 @@ async def takeTimelapse(path: Path, duration: int, grabInterval: float) -> None:
 
             camera.StartGrabbing(pylon.GrabStrategy_OneByOne)
 
-            # The function variables are for user convenience and should be translated
+            # Create some new variables for frame tracking
             lastGrab = round(-(duration // -grabInterval))
             grabCounter = 0
             failCounter = 0
@@ -125,14 +136,6 @@ async def takeVideo(path: Path, duration: int, grabInterval: float, playbackFPS:
         # Open camera to access settings
         camera.Open()
 
-        # Get camera frame dimensions
-        frame_width = camera.Width.Value
-        frame_height = camera.Height.Value
-        # Create a video writer
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        out = cv2.VideoWriter(str(path), fourcc, playbackFPS, (frame_width, frame_height))
-        if not out.isOpened():
-            raise RuntimeError(f"Could not open video writer: {path}")
         # OpenCV uses BGR images
         converter = pylon.ImageFormatConverter()
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
@@ -144,6 +147,15 @@ async def takeVideo(path: Path, duration: int, grabInterval: float, playbackFPS:
                 # settings applied, which would silently spoil a run.
                 pylon.FeaturePersistence.Load(str(SETTINGS), camera.GetNodeMap(), True)
 
+            # Get camera frame dimensions - could be changed by settings
+            frame_width = camera.Width.Value
+            frame_height = camera.Height.Value
+            # Create a video writer
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            out = cv2.VideoWriter(str(path), fourcc, playbackFPS, (frame_width, frame_height))
+            if not out.isOpened():
+                raise RuntimeError(f"Could not open video writer: {path}")
+
             #''' Reliable software triggers for the camera - throws timeout on emulation
             camera.TriggerSelector.Value = "FrameStart"
             camera.TriggerMode.Value = "On"
@@ -152,7 +164,7 @@ async def takeVideo(path: Path, duration: int, grabInterval: float, playbackFPS:
 
             camera.StartGrabbing(pylon.GrabStrategy_OneByOne)
 
-            # The function variables are for user convenience and should be translated
+            # Create some new variables for frame tracking
             lastGrab = round(-(duration // -grabInterval))
             grabCounter = 0
             failCounter = 0
@@ -186,21 +198,22 @@ async def takeVideo(path: Path, duration: int, grabInterval: float, playbackFPS:
 
 @app.get("/")
 async def root() -> dict:
+    """Check the app is running"""
     return {"Capycam": "dormant"}
 
 
 @app.get("/ready")
 async def ready() -> dict:
-    """Grab and discard a frame: a camera that opens may still not grab."""
+    """Grab and discard a frame: a camera that opens may still not grab"""
     IMAGES.mkdir(exist_ok=True)
     try:
         await anyio.to_thread.run_sync(grab, IMAGES / "ready.tiff")
     except (genicam.GenericException, RuntimeError) as exc:
-        return {"ready": False, "detail": str(exc), "settings": None}
+        return {"ready": False, "detail": str(exc)}
     return {
         "ready": True,
         "detail": "camera open and grabbing",
-        "settings": str(SETTINGS) if SETTINGS.is_file() else None,
+        "settings": str(SETTINGS) if SETTINGS.is_file() else None
     }
 
 
@@ -221,6 +234,12 @@ async def timelapse(background_tasks: BackgroundTasks, name: str="temp", duratio
     """Make a *new* folder, then initiate a timelapse. Queries appreciated"""
     IMAGES.mkdir(exist_ok=True)
     newFolder = IMAGES / name
+    # error checking
+    if duration < 0:
+        return {"name": name, "status": f"failed to start: duration must be non-negative (got {duration})"}
+    if grabInterval <= 0:
+        return {"name": name, "status": f"failed to start: grabInterval must be positive (got {grabInterval})"}
+
     try:
         newFolder.mkdir(exist_ok=False)
     except FileExistsError as e:
@@ -233,18 +252,23 @@ async def timelapse(background_tasks: BackgroundTasks, name: str="temp", duratio
 
 
 @app.get("/video/")
-async def video(background_tasks: BackgroundTasks, path: str="temp.mp4", duration: int=60,
-                     grabInterval: float=5.0, playbackFPS: int=6) -> dict:
+async def video(background_tasks: BackgroundTasks, path: str="temp.mp4",
+                duration: int=60, grabInterval: float=5.0, playbackFPS: int=6) -> dict:
     """Initiate a video recording. Queries appreciated"""
     IMAGES.mkdir(exist_ok=True)
 
     path = Path(path)
-    # error checking on path: needs to be .mp4
+    # error checking on path: needs to be .mp4 - two options available
     if path.suffix != ".mp4":
-        # I'm torn on what the response should be
         path = path.with_suffix(".mp4")
         #return {"name": path, "status": "failed to start: invalid file extension"}
-        #raise RuntimeError(f"Requested path has invalid file extension: {path} (expected *.mp4)")
+    # error checking
+    if duration < 0:
+        return {"name": path, "status": f"failed to start: duration must be non-negative (got {duration})"}
+    if grabInterval <= 0:
+        return {"name": path, "status": f"failed to start: grabInterval must be positive (got {grabInterval})"}
+    if playbackFPS <= 0:
+        return {"name": path, "status": f"failed to start: playbackFPS must be positive (got {playbackFPS})"}
 
     background_tasks.add_task(takeVideo, IMAGES / path, duration, grabInterval, playbackFPS)
 
@@ -254,6 +278,7 @@ async def video(background_tasks: BackgroundTasks, path: str="temp.mp4", duratio
 
 @app.get("/image/{name}")
 async def image(name: str) -> FileResponse:
+    """Return a download prompt for an image"""
     path = IMAGES / name
     if not path.is_file():
         raise HTTPException(404, f"no such image {name}")
@@ -262,11 +287,14 @@ async def image(name: str) -> FileResponse:
 
 @app.get("/image/{folder}/{name}")
 async def imageFromFolder(folder: str, name: str) -> FileResponse:
+    """Return a download prompt for an image in a folder"""
     path = IMAGES / folder / name
     if not path.is_file():
         raise HTTPException(404, f"no such image {folder}/{name}")
     return FileResponse(path, media_type="image/tiff")
 
+
+# Run the app - DO NOT TOUCH
 if __name__ == "__main__":
     import uvicorn
 

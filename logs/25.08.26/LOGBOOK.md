@@ -28,3 +28,15 @@ B6S1 was probably contaminated, but the stuff that grew around the contamination
 ## The timelapse is in the Sun lab *datalab* under batch 7 sample 3
 
 I'll make a new function for the web app to take a "video" (it's actually a timelapse but it returns a video instead of images). The timelapse function will stick around because it might work better with an AI agent.
+
+## Yields
+
+1) 21.8 mg, 106%
+2) 22.7 mg, 111%
+3) 21.9 mg, 107%
+4) 21.2 mg, 103%
+5) 20.5 mg, 100%
+
+All the crystals look discoloured and lumpy. Maybe something has been contaminated, the crystals have trapped water inside them, or there is cobalt hydroxide inside them.
+
+Upon viewing under the microscope, there seem to be golden ribbons/hairs of an unknown material trapped in the crystals. There also seem to be small blue specks in the crystals in sample 5. Took a while, but now we know a) something is contaminated and b) cobalt hydroxide is getting stuck in all these crystals.
